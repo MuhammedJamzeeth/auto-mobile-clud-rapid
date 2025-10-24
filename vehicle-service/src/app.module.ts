@@ -4,6 +4,7 @@ import { Vehicle } from './entities/vehicle.entity';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { VehicleModule } from './modules/vehicle.module';
+import { BullModule } from '@nestjs/bull';
 
 
 @Module({
@@ -23,6 +24,12 @@ import { VehicleModule } from './modules/vehicle.module';
   //   autoSchemaFile: 'schema.gql',
   //   playground: true,
   //  }),
+   BullModule.forRoot({
+    redis: {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379')
+    }
+   }),
    VehicleModule
 
   ],
