@@ -5,10 +5,14 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { VehicleModule } from './modules/vehicle.module';
 import { BullModule } from '@nestjs/bull';
+import { ConfigModule } from '@nestjs/config';
 
 
 @Module({
   imports: [
+   ConfigModule.forRoot({
+    isGlobal: true
+   }),
    TypeOrmModule.forRoot({
     type: "postgres",
     host: process.env.DB_HOST || 'localhost',
