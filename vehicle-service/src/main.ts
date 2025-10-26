@@ -8,9 +8,9 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true, // to type convert
-      whitelist: true // remove object properties not in the DTO
-    })
-  )
+      whitelist: true, // remove object properties not in the DTO
+    }),
+  );
 
   await app.listen(process.env.PORT ?? 3000);
 }

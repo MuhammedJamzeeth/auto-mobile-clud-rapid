@@ -44,8 +44,7 @@ export class ImportJobProcessor {
 
       for (let i = 0; i < vehicleData.length; i++) {
         try {
-          // transform the raw row into our DTO
-          const vehicle = this.transformToVehicleInput(vehicleData[i]);
+         const vehicle = this.transformToVehicleInput(vehicleData[i]);
 
           if (this.validateVehicleData(vehicle)) {
             validVehicles.push(vehicle);
@@ -127,8 +126,7 @@ export class ImportJobProcessor {
   }
 
   private validateVehicleData(vehicle?: CreateVehicleDto): boolean {
-    // Guard against undefined/null vehicle
-    if (!vehicle) return false;
+   if (!vehicle) return false;
 
     // To ensure return type is boolean !! is used
     return !!(

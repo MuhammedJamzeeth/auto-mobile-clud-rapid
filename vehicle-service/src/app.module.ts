@@ -22,11 +22,11 @@ import { ConfigModule } from '@nestjs/config';
       entities: [Vehicle],
       synchronize: process.env.NODE_ENV !== 'production',
     }),
-    //  GraphQLModule.forRoot<ApolloDriverConfig>({
-    //   driver: ApolloDriver,
-    //   autoSchemaFile: 'schema.gql',
-    //   playground: true,
-    //  }),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: 'schema.gql',
+      playground: true,
+    }),
     BullModule.forRoot({
       redis: {
         host: process.env.REDIS_HOST || 'localhost',

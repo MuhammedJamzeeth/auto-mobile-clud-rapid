@@ -1,47 +1,64 @@
-import { Field, ID, ObjectType } from "@nestjs/graphql";
-import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Field, GraphQLISODateTime, ID, ObjectType } from '@nestjs/graphql';
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @ObjectType()
 @Entity('vehicles')
 export class Vehicle {
-    @Field(() => ID)
-    @PrimaryGeneratedColumn()
-    id: number
+  @Field(() => ID)
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Field()
-    @Column()
-    firstName: string
+  @Field()
+  @Column()
+  firstName: string;
 
-    @Field()
-    @Column()
-    lastName: string
+  @Field()
+  @Column()
+  lastName: string;
 
-    @Field()
-    @Column({ unique: true })
-    email: string
+  @Field()
+  @Column({ unique: true })
+  email: string;
 
-    @Field()
-    @Column()
-    carModel: string
+  @Field()
+  @Column()
+  carMake: string;
 
-    @Field()
-    @Column({ unique: true })
-    vin: string
+  @Field()
+  @Column()
+  carModel: string;
 
-    @Field()
-    @Column({ type: "date" })
-    manufacturedDate: Date
+  @Field()
+  @Column({ unique: true })
+  vin: string;
 
-    @Field()
-    @Column({ type: 'int' })
-    ageOfVehicle: number
+  @Field(() => GraphQLISODateTime)
+  @Column({
+    type: 'date',
+    transformer: {
+      to: (value: Date) => value, // keep value as-is when saving
+      from: (value: string | null) => (value ? new Date(value) : null), // convert DB string to Date
+    },
+  })
+  manufacturedDate: Date;
 
-    @BeforeInsert()
-    @BeforeUpdate()
-    calculateAgeOfVehicle() {
-        if (this.manufacturedDate) {
-            const age = new Date().getFullYear() - this.manufacturedDate.getFullYear();
-            this.ageOfVehicle = age > 0 ? age : 0;
-        }
+  @Field()
+  @Column({ type: 'int' })
+  ageOfVehicle: number;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  calculateAgeOfVehicle() {
+    if (this.manufacturedDate) {
+      const age =
+        new Date().getFullYear() - this.manufacturedDate.getFullYear();
+      this.ageOfVehicle = age > 0 ? age : 0;
     }
+  }
 }

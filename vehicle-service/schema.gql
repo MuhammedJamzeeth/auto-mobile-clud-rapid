@@ -1,0 +1,55 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Vehicle {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+  carMake: String!
+  carModel: String!
+  vin: String!
+  manufacturedDate: DateTime!
+  ageOfVehicle: Float!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type PaginatedVehiclesResponse {
+  vehicles: [Vehicle!]!
+  total: Int!
+  page: Int!
+  totalPages: Int!
+}
+
+type Query {
+  vehicles(page: Int! = 1, limit: Int! = 100, filter: VehicleFilterDto): PaginatedVehiclesResponse!
+  vehicle(id: Int!): Vehicle!
+}
+
+input VehicleFilterDto {
+  search: String
+  carMake: String
+  carModel: String
+  vin: String
+  manufacturedDate: String
+}
+
+type Mutation {
+  updateVehicle(id: Int!, updateVehicleInput: UpdateVehicleDto!): Vehicle!
+  removeVehicle(id: Int!): Vehicle!
+}
+
+input UpdateVehicleDto {
+  firstName: String
+  lastName: String
+  email: String
+  carMake: String
+  carModel: String
+  vin: String
+  manufacturedDate: String
+}

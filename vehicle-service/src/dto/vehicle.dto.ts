@@ -1,5 +1,11 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { IsDateString, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsDateString,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 @InputType() // For input argument cannot use as a return type
 export class CreateVehicleDto {
@@ -42,54 +48,65 @@ export class CreateVehicleDto {
 @InputType()
 export class UpdateVehicleDto {
   @Field({ nullable: true })
+  @IsOptional()
   @IsString()
   firstName?: string;
 
   @Field({ nullable: true })
+  @IsOptional()
   @IsString()
   lastName?: string;
 
   @Field({ nullable: true })
-  @IsString()
+  @IsOptional()
+  @IsEmail()
   email?: string;
 
-  @Field()
-  @IsNotEmpty()
+  @Field({ nullable: true })
+  @IsOptional()
   @IsString()
-  carMake: string;
+  carMake?: string;
 
   @Field({ nullable: true })
+  @IsOptional()
   @IsString()
   carModel?: string;
 
   @Field({ nullable: true })
+  @IsOptional()
   @IsString()
   vin?: string;
 
   @Field({ nullable: true })
+  @IsOptional()
   @IsDateString()
-  manufacturedDate?: Date;
+  manufacturedDate?: string;
 }
 
 @InputType()
 export class VehicleFilterDto {
   @Field({ nullable: true })
+  @IsOptional()
   @IsString()
   search?: string;
 
   @Field({ nullable: true })
+  @IsOptional()
   @IsString()
   carMake?: string;
 
   @Field({ nullable: true })
+  @IsOptional()
   @IsString()
   carModel?: string;
 
   @Field({ nullable: true })
+  @IsOptional()
   @IsString()
   vin?: string;
 
   @Field({ nullable: true })
+  @IsOptional()
   @IsDateString()
-  manufacturedDate?: Date;
+  manufacturedDate?: string;
 }
