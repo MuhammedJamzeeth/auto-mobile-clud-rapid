@@ -108,6 +108,14 @@ export class VehicleService {
     return vehicle;
   }
 
+  async findByVin(vin: string): Promise<Vehicle> {
+    const vehicle = await this.vehicleRepository.findOne({ where: { vin } });
+    if (!vehicle) {
+      throw new NotFoundException(`Vehicle with VIN ${vin} not found`);
+    }
+    return vehicle;
+  }
+
   async update(
     id: number,
     updateVehicleDto: UpdateVehicleDto,

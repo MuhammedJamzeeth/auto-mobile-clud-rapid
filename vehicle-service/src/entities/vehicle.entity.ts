@@ -1,4 +1,10 @@
-import { Field, GraphQLISODateTime, ID, ObjectType } from '@nestjs/graphql';
+import {
+  Directive,
+  Field,
+  GraphQLISODateTime,
+  ID,
+  ObjectType,
+} from '@nestjs/graphql';
 import {
   BeforeInsert,
   BeforeUpdate,
@@ -8,6 +14,7 @@ import {
 } from 'typeorm';
 
 @ObjectType()
+@Directive('@key(fields: "vin")')
 @Entity('vehicles')
 export class Vehicle {
   @Field(() => ID)

@@ -5,8 +5,8 @@ import {
   Int,
   ObjectType,
   Resolver,
-  ArgsType,
   Mutation,
+  ResolveReference,
 } from '@nestjs/graphql';
 import { UpdateVehicleDto, VehicleFilterDto } from 'src/dto/vehicle.dto';
 import { Vehicle } from 'src/entities/vehicle.entity';
@@ -30,6 +30,14 @@ export class PaginatedVehiclesResponse {
 @Resolver(() => Vehicle)
 export class VehicleResolver {
   constructor(private readonly vehicleService: VehicleService) {}
+
+  @ResolveReference()
+  resolveReference(reference: {
+    __typename: string;
+    vin: string;
+  }): Promise<Vehicle> {
+    return this.vehicleService.findByVin(reference.vin);
+  }
 
   @Query(() => PaginatedVehiclesResponse, { name: 'vehicles' })
   async findAll(
