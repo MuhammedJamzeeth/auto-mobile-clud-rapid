@@ -68,18 +68,6 @@ export class VehicleService {
       });
     }
 
-    // if (filter?.minAge !== undefined) {
-    //   queryBuilder.andWhere('vehicle.age_of_vehicle >= :minAge', {
-    //     minAge: filter.minAge,
-    //   });
-    // }
-
-    // if (filter?.maxAge !== undefined) {
-    //   queryBuilder.andWhere('vehicle.age_of_vehicle <= :maxAge', {
-    //     maxAge: filter.maxAge,
-    //   });
-    // }
-
     // Order by manufacturedDate ascending
     queryBuilder.orderBy('vehicle.manufacturedDate', 'ASC');
 
@@ -96,6 +84,23 @@ export class VehicleService {
       page,
       totalPages,
     };
+  }
+
+  async findVehiclesByAge(age?: number): Promise<Vehicle[]> {
+    const queryBuilder = this.vehicleRepository.createQueryBuilder('vehicle');
+
+    if (age !== undefined) {
+      const currentDate = new Date();
+      const targetDate = new Date(
+        currentDate.getFullYear() - age,
+        currentDate.getMonth(),
+        currentDate.getDate(),
+      );
+      queryBuilder.where('vehicle.manufacturedDate <= :targetDate', {
+        targetDate: targetDate.toISOString().split('T')[0],
+      });
+    }
+    return await queryBuilder.getMany();
   }
 
   async findOne(id: number): Promise<Vehicle> {

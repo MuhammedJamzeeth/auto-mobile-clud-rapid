@@ -1,0 +1,28 @@
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-family, Arial, sans-serif);
+  font-size: 13px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: gray;
+}
+
+.connected .status-dot {
+  background: #28a745; /* green */
+}
+
+.disconnected .status-dot {
+  background: #dc3545; /* red */
+}
+
+.error {
+  margin-left: 12px;
+  color: #8b0000;
+  font-size: 12px;
+}

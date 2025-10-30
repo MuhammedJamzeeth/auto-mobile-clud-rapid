@@ -26,6 +26,11 @@ type PaginatedVehiclesResponse {
   totalPages: Int!
 }
 
+type ExportOutput {
+  jobId: String!
+  message: String
+}
+
 type Query {
   vehicles(page: Int! = 1, limit: Int! = 100, filter: VehicleFilterDto): PaginatedVehiclesResponse!
   vehicle(id: Int!): Vehicle!
@@ -42,6 +47,7 @@ input VehicleFilterDto {
 type Mutation {
   updateVehicle(id: Int!, updateVehicleInput: UpdateVehicleDto!): Vehicle!
   removeVehicle(id: Int!): Vehicle!
+  exportJob(input: ExportInput!): ExportOutput!
 }
 
 input UpdateVehicleDto {
@@ -52,4 +58,10 @@ input UpdateVehicleDto {
   carModel: String
   vin: String
   manufacturedDate: String
+}
+
+input ExportInput {
+  age: Float
+  userId: String
+  exportPath: String!
 }

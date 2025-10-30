@@ -5,7 +5,10 @@ import { ImportJobData } from 'src/processors/import-job.processor';
 
 @Injectable()
 export class JobService {
-  constructor(@InjectQueue('import-queue') private importQueue: Queue) {}
+  constructor(
+    @InjectQueue('import-queue') private importQueue: Queue,
+    @InjectQueue('export-queue') private exportQueue: Queue,
+  ) {}
 
   async addImportJob(
     filePath: string,
@@ -29,6 +32,25 @@ export class JobService {
     return {
       jobId: job.id,
       jobData: job.data,
+    };
+  }
+
+  async addExportJob(age?: number, userId?: string, exportPath?: string) {
+    const jobData = {
+      age,
+      exportPath,
+      userId,
+    };
+    const job = await this.exportQueue.add('export-vehicles', jobData, {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 2000,
+      },
+    });
+    return {
+      jobId: job.id.toString(),
+      message: 'Export job has been queued successfully.',
     };
   }
 }

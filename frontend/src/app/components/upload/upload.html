@@ -1,0 +1,7 @@
+<div style="display: flex; gap: 8px; align-items: center">
+  <input type="file" (change)="onFileSelected($event)" />
+  <button (click)="upload()" [disabled]="!file()">Upload</button>
+  @if ( progress() ) {
+  <span>Progress: {{ progress() }}%</span>
+  }
+</div>

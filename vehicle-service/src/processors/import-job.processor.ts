@@ -1,7 +1,7 @@
 import { CreateVehicleDto } from 'src/dto/vehicle.dto';
-import { Process, Processor } from '@nestjs/bull';
-import { Logger } from '@nestjs/common';
-import type { Job } from 'bull';
+import { InjectQueue, Process, Processor } from '@nestjs/bull';
+import { InternalServerErrorException, Logger } from '@nestjs/common';
+import type { Job, Queue } from 'bull';
 import { VehicleService } from 'src/services/vehicle.service';
 import * as XLSX from 'xlsx';
 import * as fs from 'fs';
@@ -17,7 +17,10 @@ export interface ImportJobData {
 export class ImportJobProcessor {
   private readonly logger = new Logger(ImportJobProcessor.name);
 
-  constructor(private readonly vehicleService: VehicleService) {}
+  constructor(
+    private readonly vehicleService: VehicleService,
+    @InjectQueue('notification') private readonly notification: Queue,
+  ) {}
 
   @Process('import-vehicles')
   async handleImportVehicles(job: Job<ImportJobData>) {
@@ -28,6 +31,10 @@ export class ImportJobProcessor {
     );
 
     // Send notification
+    await this.notification.add('notify', {
+      userId: job.data.userId,
+      message: `Import job started for file: ${filePath}`,
+    });
 
     try {
       let vehicleData: any[] = [];
@@ -44,7 +51,7 @@ export class ImportJobProcessor {
 
       for (let i = 0; i < vehicleData.length; i++) {
         try {
-         const vehicle = this.transformToVehicleInput(vehicleData[i]);
+          const vehicle = this.transformToVehicleInput(vehicleData[i]);
 
           if (this.validateVehicleData(vehicle)) {
             validVehicles.push(vehicle);
@@ -68,9 +75,16 @@ export class ImportJobProcessor {
         this.logger.debug(
           `Successfully imported ${validVehicles.length} vehicles`,
         );
-      }
 
-      // Send completion notification
+        // Send completion notification
+        await this.notification.add('notify', {
+          userId: job.data.userId,
+          message: `Import completed for file: ${filePath}`,
+          type: 'import',
+          status: 'completed',
+          data: { imported: validVehicles.length, errors: errors.length },
+        });
+      }
 
       if (errors.length > 0) {
         this.logger.warn(
@@ -79,15 +93,41 @@ export class ImportJobProcessor {
         );
       }
 
-      return {
+      const result = {
         imported: validVehicles.length,
         errors: errors.length,
         errorDetails: errors,
       };
+
+      // If there were errors, also notify as failed
+      if (errors.length > 0) {
+        await this.notification.add('notify', {
+          userId: job.data.userId,
+          message: `Import completed with ${errors.length} errors for file: ${filePath}`,
+          type: 'import',
+          status: 'failed',
+          data: {
+            imported: validVehicles.length,
+            errors: errors.length,
+            details: errors,
+          },
+        });
+      }
+
+      return result;
     } catch (error) {
       this.logger.error(`Import job failed:`, error);
 
       // Send notification
+      await this.notification.add('notify', {
+        userId: job.data.userId,
+        message: `Import job failed for file: ${filePath} - ${(error as Error).message}`,
+        type: 'import',
+        status: 'failed',
+        data: { error: (error as Error).message },
+      });
+
+      throw new InternalServerErrorException('Import job failed');
     }
   }
 
@@ -126,7 +166,7 @@ export class ImportJobProcessor {
   }
 
   private validateVehicleData(vehicle?: CreateVehicleDto): boolean {
-   if (!vehicle) return false;
+    if (!vehicle) return false;
 
     // To ensure return type is boolean !! is used
     return !!(

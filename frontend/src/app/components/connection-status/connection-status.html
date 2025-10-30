@@ -1,0 +1,12 @@
+<div class="connection-status" [ngClass]="status">
+  <div class="status-dot" aria-hidden="true"></div>
+  <div class="status-text">
+    <span *ngIf="status === 'connected'">Connected</span>
+    <span *ngIf="status === 'disconnected'">Disconnected</span>
+  </div>
+
+  <div class="error" *ngIf="error">
+    <strong>Error:</strong>
+    <span>{{ error }}</span>
+  </div>
+</div>

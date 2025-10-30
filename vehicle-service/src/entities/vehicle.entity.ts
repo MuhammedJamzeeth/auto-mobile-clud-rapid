@@ -64,7 +64,8 @@ export class Vehicle {
   calculateAgeOfVehicle() {
     if (this.manufacturedDate) {
       const age =
-        new Date().getFullYear() - this.manufacturedDate.getFullYear();
+        new Date().getFullYear() -
+        new Date(this.manufacturedDate).getFullYear();
       this.ageOfVehicle = age > 0 ? age : 0;
     }
   }

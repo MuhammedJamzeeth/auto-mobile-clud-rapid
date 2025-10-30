@@ -1,0 +1,17 @@
+<div class="notifications">
+  <div
+    class="notification"
+    *ngFor="let n of notifications"
+    [ngClass]="n.status || n.type"
+    role="status"
+  >
+    <div class="meta">
+      <div class="type">{{ n.type || n.status || 'info' }}</div>
+      <button class="close" (click)="remove(n.id)" aria-label="dismiss">×</button>
+    </div>
+
+    <div class="message">{{ n.message }}</div>
+
+    <div class="time" *ngIf="n.timestamp">{{ n.timestamp }}</div>
+  </div>
+</div>
