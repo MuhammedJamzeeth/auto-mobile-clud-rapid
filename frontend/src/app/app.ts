@@ -65,7 +65,7 @@ export class App implements AfterViewInit {
     }
 
     console.log(`Logging out user: ${userId}`);
-    
+
     this.authService.logout().subscribe({
       next: (response) => {
         console.log('Logout successful:', response);
@@ -78,7 +78,7 @@ export class App implements AfterViewInit {
         // Even if the backend call fails, log out locally
         this.authService.setLoggedOut();
         this.showRightPanel.set(false);
-      }
+      },
     });
   }
 
