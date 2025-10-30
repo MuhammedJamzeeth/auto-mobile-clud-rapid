@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatCardModule } from '@angular/material/card';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Upload } from './components/upload/upload';
 import { Notification } from './components/notification/notification';
 import { ConnectionStatus } from './components/connection-status/connection-status';
@@ -27,6 +28,7 @@ import { AuthService } from './services/auth.service';
     MatButtonModule,
     MatProgressBarModule,
     MatCardModule,
+    MatTooltipModule,
     Upload,
     Notification,
     ConnectionStatus,
@@ -53,6 +55,31 @@ export class App implements AfterViewInit {
   onLoginSuccess(loginResponse: LoginResponse): void {
     console.log('User logged in successfully:', loginResponse);
     this.authService.setLoggedIn(loginResponse.userId);
+  }
+
+  onLogout(): void {
+    const userId = this.authService.getCurrentUserId();
+    if (!userId) {
+      console.error('No user is logged in');
+      return;
+    }
+
+    console.log(`Logging out user: ${userId}`);
+    
+    this.authService.logout().subscribe({
+      next: (response) => {
+        console.log('Logout successful:', response);
+        this.authService.setLoggedOut();
+        // Close the right panel when logging out
+        this.showRightPanel.set(false);
+      },
+      error: (err) => {
+        console.error('Logout error:', err);
+        // Even if the backend call fails, log out locally
+        this.authService.setLoggedOut();
+        this.showRightPanel.set(false);
+      }
+    });
   }
 
   toggleRightPanel() {

@@ -18,8 +18,11 @@
       </div>
 
       <div class="toolbar-right">
-        <button mat-icon-button (click)="toggleRightPanel()">
+        <button mat-icon-button (click)="toggleRightPanel()" matTooltip="Toggle Dashboard">
           <mat-icon>{{ showRightPanel() ? 'close' : 'dashboard' }}</mat-icon>
+        </button>
+        <button mat-icon-button (click)="onLogout()" matTooltip="Logout" class="logout-btn">
+          <mat-icon>logout</mat-icon>
         </button>
       </div>
     </div>
