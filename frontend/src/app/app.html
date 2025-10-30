@@ -1,4 +1,9 @@
 <div class="app-container">
+  @if (!authService.isLoggedIn()) {
+  <!-- Login Screen -->
+  <app-login (loginSuccess)="onLoginSuccess($event)" />
+  } @else {
+  <!-- Main Application -->
   <!-- Top Navigation Bar -->
   <mat-toolbar class="modern-toolbar" color="primary">
     <div class="toolbar-content">
@@ -9,6 +14,7 @@
 
       <div class="toolbar-center">
         <app-connection-status />
+        <span class="user-info">Welcome, {{ authService.currentUserId() }}</span>
       </div>
 
       <div class="toolbar-right">
@@ -95,4 +101,5 @@
 
   <!-- Global Loading Overlay -->
   <app-global-loading />
+  }
 </div>

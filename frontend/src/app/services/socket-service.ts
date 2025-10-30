@@ -62,6 +62,20 @@ export class SocketService {
     this.socket.on('notification', callback);
   }
 
+  joinUser(userId: string): void {
+    if (this.socket && this.socket.connected) {
+      console.log(`Joining user ${userId} to notification service`);
+      this.socket.emit('join', { userId });
+
+      // Listen for join confirmation
+      this.socket.on('joined', (data: any) => {
+        console.log('Successfully joined notifications:', data);
+      });
+    } else {
+      console.warn('Cannot join user: socket not connected');
+    }
+  }
+
   get isConnected(): boolean {
     return !!(this.socket && this.socket.connected);
   }

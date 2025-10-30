@@ -8,6 +8,8 @@ import { JobService } from 'src/services/job.service';
 import { ImportJobProcessor } from 'src/processors/import-job.processor';
 import { BullModule } from '@nestjs/bull';
 import { UploadController } from 'src/controllers/upload.controller';
+import { AuthController } from 'src/controllers/auth.controller';
+import { AuthService } from 'src/services/auth.service';
 import { JobResolver } from 'src/resolvers/job.resolver';
 import { ExportJobProcessor } from 'src/processors/export-job.processor';
 
@@ -19,16 +21,17 @@ import { ExportJobProcessor } from 'src/processors/export-job.processor';
     BullModule.registerQueue({ name: 'notification' }),
     BullModule.registerQueue({ name: 'export-queue' }),
   ],
-  controllers: [UploadController],
+  controllers: [UploadController, AuthController],
   providers: [
     NotificationGateway,
     VehicleService,
+    AuthService,
     JobService,
     ImportJobProcessor,
     ExportJobProcessor,
     VehicleResolver,
     JobResolver,
   ],
-  exports: [VehicleService, JobService],
+  exports: [VehicleService, JobService, AuthService],
 })
 export class VehicleModule {}

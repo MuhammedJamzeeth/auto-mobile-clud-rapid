@@ -9,6 +9,7 @@ import { MatCardModule } from '@angular/material/card';
 import { CommonModule } from '@angular/common';
 import { LoadingService } from '../../services/loading.service';
 import { SocketService } from '../../services/socket-service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-upload',
@@ -30,6 +31,7 @@ export class Upload {
   private http = inject(HttpClient);
   private loadingService = inject(LoadingService);
   private socketService = inject(SocketService);
+  private authService = inject(AuthService);
 
   // Event to notify parent component to show notification panel
   uploadStarted = output<void>();
@@ -48,9 +50,15 @@ export class Upload {
   upload(): void {
     const file = this.file();
     const url = 'http://localhost:3000/upload/csv';
+    const userId = this.authService.getCurrentUserId();
 
     if (!file) {
       console.error('No file selected for upload.');
+      return;
+    }
+
+    if (!userId) {
+      console.error('No user is logged in.');
       return;
     }
 
@@ -58,6 +66,15 @@ export class Upload {
     if (!this.socketService.isConnected) {
       console.log('Connecting to notification service...');
       this.socketService.connect();
+
+      // Join the user to receive notifications
+      setTimeout(() => {
+        console.log(`Joining user ${userId} to notification service`);
+        this.socketService.joinUser(userId);
+      }, 500);
+    } else {
+      // Make sure user is joined for notifications
+      this.socketService.joinUser(userId);
     }
 
     // Emit event to show notification panel
@@ -69,6 +86,7 @@ export class Upload {
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('userId', userId); // Include userId in the upload
 
     this.http
       .post(url, formData, {
