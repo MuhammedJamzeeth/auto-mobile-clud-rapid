@@ -1,17 +1,68 @@
-<div class="notifications">
-  <div
-    class="notification"
-    *ngFor="let n of notifications"
-    [ngClass]="n.status || n.type"
-    role="status"
-  >
-    <div class="meta">
-      <div class="type">{{ n.type || n.status || 'info' }}</div>
-      <button class="close" (click)="remove(n.id)" aria-label="dismiss">×</button>
-    </div>
-
-    <div class="message">{{ n.message }}</div>
-
-    <div class="time" *ngIf="n.timestamp">{{ n.timestamp }}</div>
+<div class="notifications-container">
+  <!-- Connection Status -->
+  <div class="connection-status" [class]="isConnected ? 'connected' : 'disconnected'">
+    <mat-icon>{{ isConnected ? 'wifi' : 'wifi_off' }}</mat-icon>
+    <span>{{ isConnected ? 'Connected' : 'Connecting...' }}</span>
+    @if (isConnected) {
+    <button mat-icon-button (click)="testNotification()" matTooltip="Send test notification">
+      <mat-icon>bug_report</mat-icon>
+    </button>
+    }
   </div>
+
+  @if (notifications.length === 0) {
+  <div class="empty-notifications">
+    <mat-icon class="empty-icon">notifications_none</mat-icon>
+    <p>No notifications</p>
+  </div>
+  } @else {
+  <div class="notifications-list">
+    @for (notification of notifications; track notification.id) {
+    <mat-card
+      class="notification-card"
+      [class]="'notification-' + (notification.status || notification.type || 'info')"
+    >
+      <mat-card-content>
+        <div class="notification-header">
+          <div class="notification-type">
+            <mat-icon
+              class="type-icon"
+              [class]="getNotificationIconClass(notification.type || '', notification.status || '')"
+              >{{
+                getNotificationIcon(notification.type || notification.status || 'info')
+              }}</mat-icon
+            >
+            <mat-chip
+              class="type-chip"
+              [class]="'chip-' + (notification.status || notification.type || 'info')"
+            >
+              {{ notification.type || notification.status || 'info' | titlecase }}
+            </mat-chip>
+          </div>
+
+          <button
+            mat-icon-button
+            class="close-btn"
+            (click)="remove(notification.id)"
+            aria-label="Dismiss notification"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <div class="notification-message">
+          {{ notification.message }}
+        </div>
+
+        @if (notification.timestamp) {
+        <div class="notification-time">
+          <mat-icon class="time-icon">schedule</mat-icon>
+          {{ notification.timestamp | date : 'medium' }}
+        </div>
+        }
+      </mat-card-content>
+    </mat-card>
+    }
+  </div>
+  }
 </div>

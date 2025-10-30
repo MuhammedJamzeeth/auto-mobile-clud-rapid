@@ -3,11 +3,14 @@ import { SocketService } from '../../services/socket-service';
 import { Subscription } from 'rxjs';
 import { auditTime, distinctUntilChanged } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   standalone: true,
   selector: 'app-connection-status',
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule, MatChipsModule, MatTooltipModule],
   templateUrl: './connection-status.html',
   styleUrl: './connection-status.scss',
 })
@@ -46,5 +49,13 @@ export class ConnectionStatus implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+  }
+
+  getStatusTooltip(): string {
+    if (this.status === 'connected') {
+      return 'Real-time connection established';
+    } else {
+      return this.error || 'Connection lost - attempting to reconnect';
+    }
   }
 }

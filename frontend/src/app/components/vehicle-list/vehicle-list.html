@@ -1,72 +1,216 @@
-<div>
-  <div style="display: flex; gap: 8px; align-items: center">
-    <input [(ngModel)]="search" placeholder="Search model (use * for wildcard)" />
-    <button (click)="searchVehicles()">Search</button>
-    <button (click)="clear()">Clear</button>
-    <label style="margin-left: 12px">Page: {{ page }} / {{ totalPages }}</label>
+<div class="vehicle-list-container">
+  <!-- Search and Filter Section -->
+  <div class="search-section">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search vehicles</mat-label>
+      <input
+        matInput
+        [(ngModel)]="search"
+        placeholder="Enter car model (use * for wildcard)"
+        (keyup.enter)="searchVehicles()"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <div class="search-actions">
+      <button mat-raised-button color="primary" (click)="searchVehicles()" class="search-btn">
+        <mat-icon>search</mat-icon>
+        Search
+      </button>
+
+      <button mat-stroked-button (click)="clear()" class="clear-btn">
+        <mat-icon>clear</mat-icon>
+        Clear
+      </button>
+    </div>
+
+    <div class="page-info">
+      <mat-chip-set>
+        <mat-chip>Page {{ page }} of {{ totalPages }}</mat-chip>
+        <mat-chip>{{ vehicles.length }} vehicles</mat-chip>
+      </mat-chip-set>
+    </div>
   </div>
 
-  <table class="vehicle-list" style="width: 100%; margin-top: 12px; border-collapse: collapse">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>First</th>
-        <th>Last</th>
-        <th>Make</th>
-        <th>Model</th>
-        <th>VIN</th>
-        <th>Manufactured</th>
-        <th>Age</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let v of vehicles">
-        <td>{{ v.id }}</td>
-
-        <td *ngIf="!isEditing(v)">{{ v.firstName }}</td>
-        <td *ngIf="isEditing(v)">
-          <input [(ngModel)]="editModel.firstName" />
+  <!-- Modern Data Table -->
+  <div class="table-container">
+    <table mat-table [dataSource]="vehicles" class="modern-table">
+      <!-- ID Column -->
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>ID</th>
+        <td mat-cell *matCellDef="let vehicle">
+          <span class="vehicle-id">{{ vehicle.id }}</span>
         </td>
+      </ng-container>
 
-        <td *ngIf="!isEditing(v)">{{ v.lastName }}</td>
-        <td *ngIf="isEditing(v)">
-          <input [(ngModel)]="editModel.lastName" />
+      <!-- First Name Column -->
+      <ng-container matColumnDef="firstName">
+        <th mat-header-cell *matHeaderCellDef>First Name</th>
+        <td mat-cell *matCellDef="let vehicle">
+          @if (!isEditing(vehicle)) {
+          <span>{{ vehicle.firstName }}</span>
+          } @else {
+          <mat-form-field appearance="outline" class="edit-field">
+            <input matInput [(ngModel)]="editModel.firstName" />
+          </mat-form-field>
+          }
         </td>
+      </ng-container>
 
-        <td *ngIf="!isEditing(v)">{{ v.carMake }}</td>
-        <td *ngIf="isEditing(v)">
-          <input [(ngModel)]="editModel.carMake" />
+      <!-- Last Name Column -->
+      <ng-container matColumnDef="lastName">
+        <th mat-header-cell *matHeaderCellDef>Last Name</th>
+        <td mat-cell *matCellDef="let vehicle">
+          @if (!isEditing(vehicle)) {
+          <span>{{ vehicle.lastName }}</span>
+          } @else {
+          <mat-form-field appearance="outline" class="edit-field">
+            <input matInput [(ngModel)]="editModel.lastName" />
+          </mat-form-field>
+          }
         </td>
+      </ng-container>
 
-        <td *ngIf="!isEditing(v)">{{ v.carModel }}</td>
-        <td *ngIf="isEditing(v)">
-          <input [(ngModel)]="editModel.carModel" />
+      <!-- Make Column -->
+      <ng-container matColumnDef="make">
+        <th mat-header-cell *matHeaderCellDef>Make</th>
+        <td mat-cell *matCellDef="let vehicle">
+          @if (!isEditing(vehicle)) {
+          <mat-chip class="make-chip">{{ vehicle.carMake }}</mat-chip>
+          } @else {
+          <mat-form-field appearance="outline" class="edit-field">
+            <input matInput [(ngModel)]="editModel.carMake" />
+          </mat-form-field>
+          }
         </td>
+      </ng-container>
 
-        <td>{{ v.vin }}</td>
-
-        <td *ngIf="!isEditing(v)">
-          {{ v.manufacturedDate | date : 'yyyy-MM-dd' }}
+      <!-- Model Column -->
+      <ng-container matColumnDef="carModel">
+        <th mat-header-cell *matHeaderCellDef>Model</th>
+        <td mat-cell *matCellDef="let vehicle">
+          @if (!isEditing(vehicle)) {
+          <span class="model-text">{{ vehicle.carModel }}</span>
+          } @else {
+          <mat-form-field appearance="outline" class="edit-field">
+            <input matInput [(ngModel)]="editModel.carModel" />
+          </mat-form-field>
+          }
         </td>
-        <td *ngIf="isEditing(v)">
-          <input type="date" [(ngModel)]="editModel.manufacturedDate" />
+      </ng-container>
+
+      <!-- VIN Column -->
+      <ng-container matColumnDef="vin">
+        <th mat-header-cell *matHeaderCellDef>VIN</th>
+        <td mat-cell *matCellDef="let vehicle">
+          <code class="vin-code" [matTooltip]="vehicle.vin">{{ vehicle.vin }}</code>
         </td>
+      </ng-container>
 
-        <td>{{ v.ageOfVehicle }}</td>
-
-        <td>
-          <button *ngIf="!isEditing(v)" (click)="startEdit(v)">Edit</button>
-          <button *ngIf="isEditing(v)" (click)="saveEdit(v)">Save</button>
-          <button *ngIf="isEditing(v)" (click)="cancelEdit()">Cancel</button>
-          <button (click)="confirmDelete(v)">Delete</button>
+      <!-- Manufactured Date Column -->
+      <ng-container matColumnDef="manufactured">
+        <th mat-header-cell *matHeaderCellDef>Manufactured</th>
+        <td mat-cell *matCellDef="let vehicle">
+          @if (!isEditing(vehicle)) {
+          <span>{{ vehicle.manufacturedDate | date : 'MMM dd, yyyy' }}</span>
+          } @else {
+          <mat-form-field appearance="outline" class="edit-field">
+            <input matInput type="date" [(ngModel)]="editModel.manufacturedDate" />
+          </mat-form-field>
+          }
         </td>
-      </tr>
-    </tbody>
-  </table>
+      </ng-container>
 
-  <div style="margin-top: 12px; display: flex; gap: 8px">
-    <button (click)="prevPage()">Prev</button>
-    <button (click)="nextPage()">Next</button>
+      <!-- Age Column -->
+      <ng-container matColumnDef="age">
+        <th mat-header-cell *matHeaderCellDef>Age</th>
+        <td mat-cell *matCellDef="let vehicle">
+          <mat-chip [class]="getAgeChipClass(vehicle.ageOfVehicle)">
+            {{ vehicle.ageOfVehicle }} years
+          </mat-chip>
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let vehicle">
+          <div class="action-buttons">
+            @if (!isEditing(vehicle)) {
+            <button
+              mat-icon-button
+              color="primary"
+              (click)="startEdit(vehicle)"
+              matTooltip="Edit vehicle"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            } @else {
+            <button
+              mat-icon-button
+              color="primary"
+              (click)="saveEdit(vehicle)"
+              matTooltip="Save changes"
+            >
+              <mat-icon>save</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelEdit()" matTooltip="Cancel">
+              <mat-icon>cancel</mat-icon>
+            </button>
+            }
+            <button
+              mat-icon-button
+              color="warn"
+              (click)="confirmDelete(vehicle)"
+              matTooltip="Delete vehicle"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Table Header and Rows -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        [class.editing-row]="isEditing(row)"
+      ></tr>
+    </table>
   </div>
+
+  <!-- Pagination Controls -->
+  <div class="pagination-section">
+    <div class="pagination-controls">
+      <button
+        mat-icon-button
+        [disabled]="page <= 1"
+        (click)="prevPage()"
+        matTooltip="Previous page"
+      >
+        <mat-icon>navigate_before</mat-icon>
+      </button>
+
+      <span class="page-indicator"> Page {{ page }} of {{ totalPages }} </span>
+
+      <button
+        mat-icon-button
+        [disabled]="page >= totalPages"
+        (click)="nextPage()"
+        matTooltip="Next page"
+      >
+        <mat-icon>navigate_next</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  @if (vehicles.length === 0) {
+  <div class="empty-state">
+    <mat-icon class="empty-icon">directions_car</mat-icon>
+    <h3>No vehicles found</h3>
+    <p>Upload a CSV file to get started or adjust your search criteria.</p>
+  </div>
+  }
 </div>

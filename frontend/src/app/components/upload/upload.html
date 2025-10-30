@@ -1,7 +1,55 @@
-<div style="display: flex; gap: 8px; align-items: center">
-  <input type="file" (change)="onFileSelected($event)" />
-  <button (click)="upload()" [disabled]="!file()">Upload</button>
-  @if ( progress() ) {
-  <span>Progress: {{ progress() }}%</span>
+<div class="upload-container">
+  <!-- File Selection Area -->
+  <div
+    class="file-drop-zone"
+    [class.has-file]="file()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (click)="fileInput.click()"
+  >
+    <input
+      #fileInput
+      type="file"
+      accept=".csv,.xlsx,.xls"
+      (change)="onFileSelected($event)"
+      style="display: none"
+    />
+
+    <div class="drop-content">
+      @if (!file()) {
+      <mat-icon class="upload-icon">cloud_upload</mat-icon>
+      <h4>Drop your file here</h4>
+      <p>or click to browse</p>
+      <small>Supports CSV, Excel files</small>
+      } @else {
+      <mat-icon class="file-icon">description</mat-icon>
+      <h4>{{ file()?.name }}</h4>
+      <p>{{ file()?.size || 0 | number }} bytes</p>
+      }
+    </div>
+  </div>
+
+  <!-- Upload Button -->
+  @if (file()) {
+  <button
+    mat-raised-button
+    color="primary"
+    class="upload-btn"
+    (click)="upload()"
+    [disabled]="progress() > 0 && progress() < 100"
+  >
+    <mat-icon>{{ progress() > 0 && progress() < 100 ? 'hourglass_empty' : 'upload' }}</mat-icon>
+    {{ progress() > 0 && progress() < 100 ? 'Uploading...' : 'Upload File' }}
+  </button>
+  }
+
+  <!-- Progress Bar -->
+  @if (progress() > 0) {
+  <div class="progress-container">
+    <mat-progress-bar mode="determinate" [value]="progress()" class="upload-progress">
+    </mat-progress-bar>
+    <div class="progress-text">{{ progress() | number : '1.0-0' }}%</div>
+  </div>
   }
 </div>

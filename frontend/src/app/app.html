@@ -1,6 +1,98 @@
-<div>
-  <app-connection-status />
-  <app-upload />
-  <app-notification />
-  <app-vehicle-list />
+<div class="app-container">
+  <!-- Top Navigation Bar -->
+  <mat-toolbar class="modern-toolbar" color="primary">
+    <div class="toolbar-content">
+      <div class="toolbar-left">
+        <mat-icon class="app-icon">directions_car</mat-icon>
+        <span class="app-title">{{ title() }}</span>
+      </div>
+
+      <div class="toolbar-center">
+        <app-connection-status />
+      </div>
+
+      <div class="toolbar-right">
+        <button mat-icon-button (click)="toggleRightPanel()">
+          <mat-icon>{{ showRightPanel() ? 'close' : 'dashboard' }}</mat-icon>
+        </button>
+      </div>
+    </div>
+  </mat-toolbar>
+
+  <!-- Main Content Layout -->
+  <div class="main-layout">
+    <!-- Left Sidebar -->
+    <div class="left-sidebar">
+      <div class="sidenav-header">
+        <div class="header-top">
+          <mat-icon>upload</mat-icon>
+          <h3>Upload File</h3>
+        </div>
+        <p class="auto-process-note">Processing starts automatically after upload</p>
+      </div>
+
+      <div class="upload-section">
+        <app-upload
+          (uploadStarted)="onUploadStarted()"
+          (uploadCompleted)="onUploadCompleted($event)"
+        />
+      </div>
+
+      <!-- Process will start automatically after successful upload -->
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="content-wrapper">
+        <mat-card class="modern-card main-card">
+          <mat-card-header>
+            <mat-card-title>Vehicle Management</mat-card-title>
+            <mat-card-subtitle>Manage and view your vehicle data</mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <app-vehicle-list #vehicleList />
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+
+    <!-- Right Panel for Progress and Notifications -->
+    @if (showRightPanel()) {
+    <div class="right-panel">
+      <div class="right-panel-header">
+        <mat-icon>notifications</mat-icon>
+        <h3>Process Monitor</h3>
+        <button mat-icon-button (click)="toggleRightPanel()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Progress Section -->
+      @if (loadingService.loading()) {
+      <div class="progress-section">
+        <h4>{{ loadingService.message() }}</h4>
+        <mat-progress-bar
+          mode="determinate"
+          [value]="loadingService.progress()"
+          class="modern-progress-bar"
+        >
+        </mat-progress-bar>
+        <div class="progress-text">
+          {{ loadingService.progress() | number : '1.0-0' }}% Complete
+        </div>
+      </div>
+      }
+
+      <!-- Notifications Section -->
+      <div class="notifications-section">
+        <h4>Notifications</h4>
+        <app-notification />
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Global Loading Overlay -->
+  <app-global-loading />
 </div>

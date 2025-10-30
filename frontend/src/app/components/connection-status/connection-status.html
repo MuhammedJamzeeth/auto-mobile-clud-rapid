@@ -1,12 +1,22 @@
-<div class="connection-status" [ngClass]="status">
-  <div class="status-dot" aria-hidden="true"></div>
-  <div class="status-text">
-    <span *ngIf="status === 'connected'">Connected</span>
-    <span *ngIf="status === 'disconnected'">Disconnected</span>
-  </div>
+<div class="connection-status-container">
+  <mat-chip-set>
+    <mat-chip [class]="'status-chip-' + status" [matTooltip]="getStatusTooltip()">
+      <mat-icon class="status-icon">
+        {{ status === 'connected' ? 'wifi' : 'wifi_off' }}
+      </mat-icon>
 
-  <div class="error" *ngIf="error">
-    <strong>Error:</strong>
-    <span>{{ error }}</span>
-  </div>
+      <span class="status-text">
+        {{ status === 'connected' ? 'Connected' : 'Disconnected' }}
+      </span>
+
+      <div class="status-indicator" [class]="status"></div>
+    </mat-chip>
+  </mat-chip-set>
+
+  @if (error) {
+  <mat-chip class="error-chip" [matTooltip]="error">
+    <mat-icon>error</mat-icon>
+    <span>Connection Error</span>
+  </mat-chip>
+  }
 </div>

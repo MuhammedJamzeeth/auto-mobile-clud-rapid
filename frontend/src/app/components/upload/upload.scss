@@ -1,0 +1,113 @@
+.upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .file-drop-zone {
+    border: 2px dashed rgba(96, 165, 250, 0.3);
+    border-radius: 12px;
+    padding: 32px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(96, 165, 250, 0.05);
+
+    &:hover {
+      border-color: rgba(96, 165, 250, 0.6);
+      background: rgba(96, 165, 250, 0.1);
+      transform: translateY(-2px);
+    }
+
+    &.has-file {
+      border-color: rgba(34, 197, 94, 0.6);
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    .drop-content {
+      .upload-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: rgba(96, 165, 250, 0.7);
+        margin-bottom: 16px;
+      }
+
+      .file-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: rgba(34, 197, 94, 0.7);
+        margin-bottom: 16px;
+      }
+
+      h4 {
+        margin: 0 0 8px 0;
+        color: #e5e7eb;
+        font-weight: 500;
+        font-size: 18px;
+      }
+
+      p {
+        margin: 0 0 8px 0;
+        color: #9ca3af;
+        font-size: 14px;
+      }
+
+      small {
+        color: #6b7280;
+        font-size: 12px;
+      }
+    }
+  }
+
+  .upload-btn {
+    width: 100%;
+    height: 44px;
+    border-radius: 22px;
+    font-weight: 500;
+    text-transform: none;
+    box-shadow: 0 4px 15px rgba(96, 165, 250, 0.3);
+
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+
+  .progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .upload-progress {
+      height: 6px;
+      border-radius: 3px;
+      background-color: rgba(255, 255, 255, 0.1);
+
+      ::ng-deep .mdc-linear-progress__bar-inner {
+        background: linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%);
+      }
+    }
+
+    .progress-text {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 14px;
+      font-weight: 500;
+    }
+  }
+}
+
+// Drag and drop animations
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.file-drop-zone:hover .upload-icon {
+  animation: pulse 2s infinite;
+}

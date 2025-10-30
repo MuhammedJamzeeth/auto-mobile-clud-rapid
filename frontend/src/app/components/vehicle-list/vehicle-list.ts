@@ -1,23 +1,60 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule } from '@angular/material/dialog';
 import { VehicleListService } from '../../services/vehicle-list';
 import { Vehicle } from '../models/vehicle.type';
+import { SocketService } from '../../services/socket-service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-vehicle-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatChipsModule,
+    MatTooltipModule,
+    MatDialogModule,
+  ],
   templateUrl: './vehicle-list.html',
   styleUrls: ['./vehicle-list.scss'],
 })
-export class VehicleList implements OnInit {
+export class VehicleList implements OnInit, OnDestroy {
   private vehicleListService = inject(VehicleListService);
+  private socketService = inject(SocketService);
+  private destroy$ = new Subject<void>();
 
   vehicles: Vehicle[] = [];
   page = 1;
   totalPages = 1;
   search = '';
+
+  displayedColumns: string[] = [
+    'id',
+    'firstName',
+    'lastName',
+    'make',
+    'carModel',
+    'vin',
+    'manufactured',
+    'age',
+    'actions',
+  ];
 
   // editing state
   editId: number | null = null;
@@ -25,6 +62,28 @@ export class VehicleList implements OnInit {
 
   ngOnInit(): void {
     this.load(this.page);
+    this.setupNotificationListener();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private setupNotificationListener(): void {
+    // Listen for socket notifications to auto-refresh table when import completes
+    this.socketService.onNotify((data: any) => {
+      console.log('VehicleList received notification:', data);
+
+      // Check if this is an import completion notification
+      if (data?.type === 'import' && data?.status === 'completed') {
+        console.log('Import completed - auto-refreshing vehicle table');
+        // Wait a moment for backend to fully process, then refresh
+        setTimeout(() => {
+          this.load(this.page);
+        }, 1000);
+      }
+    });
   }
 
   private load(page = 1) {
@@ -36,12 +95,19 @@ export class VehicleList implements OnInit {
           this.vehicles = data.vehicles || [];
           this.page = data.page || page;
           this.totalPages = data.totalPages || 1;
+          console.log(`Loaded ${this.vehicles.length} vehicles for page ${this.page}`);
         }
       },
       error: (err) => {
         console.error('Error loading vehicles:', err);
       },
     });
+  }
+
+  // Public method to refresh the table (can be called from parent components)
+  public refreshTable(): void {
+    console.log('Manually refreshing vehicle table...');
+    this.load(this.page);
   }
 
   searchVehicles() {
@@ -102,5 +168,11 @@ export class VehicleList implements OnInit {
       next: () => this.load(this.page),
       error: (err) => console.error('Delete error:', err),
     });
+  }
+
+  getAgeChipClass(age: number): string {
+    if (age <= 3) return 'age-new';
+    if (age <= 7) return 'age-mid';
+    return 'age-old';
   }
 }
