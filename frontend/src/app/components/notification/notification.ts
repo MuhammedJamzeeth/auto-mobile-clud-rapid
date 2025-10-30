@@ -84,8 +84,9 @@ export class Notification implements OnInit, OnDestroy {
 
       // If this is an import completion notification, show additional feedback
       if (data?.type === 'import' && data?.status === 'completed') {
-        const importedCount = data?.data?.imported || 0;
-        const errorCount = data?.data?.errors || 0;
+        console.log(data?.data?.data);
+        const importedCount = data?.data?.data?.imported || 0;
+        const errorCount = data?.data?.data?.errors || 0;
 
         setTimeout(() => {
           this.show({

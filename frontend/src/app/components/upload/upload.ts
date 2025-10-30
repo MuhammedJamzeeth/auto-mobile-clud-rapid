@@ -90,23 +90,17 @@ export class Upload {
             this.loadingService.updateProgress(100, 'Upload completed successfully!');
 
             // Log success for debugging
-            console.log(
-              'Upload response received. Processing started automatically by backend service...'
-            );
+            console.log('Upload response received. Backend will process the file asynchronously.');
 
-            // Emit upload completed event
+            // Emit upload completed event so parent can show notifications / processing status
             this.uploadCompleted.emit(event.body);
 
-            // Update loading message to reflect automatic processing
-            this.loadingService.updateProgress(
-              100,
-              'Upload completed! Processing started automatically...'
-            );
-
+            // Briefly show 100% progress then hide the global loading popup so
+            // backend processing (which happens asynchronously) doesn't keep the UI blocked.
             setTimeout(() => {
               this.loadingService.hide();
               this.progress.set(0);
-            }, 2000);
+            }, 500);
           }
         },
         error: (err) => {
