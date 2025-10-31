@@ -14,12 +14,8 @@ export class VehicleListService {
   total = 0;
   totalPages = 1;
   search = '';
-  private readonly apiUrl = 'http://localhost:4000/graphql';
+  private readonly apiUrl = 'http://localhost:4040/graphql';
 
-  /**
-   * Load vehicles from GraphQL endpoint. Returns the raw HTTP observable so the
-   * caller can subscribe and update UI state.
-   */
   loadVehicles(
     page: number = this.page,
     limit: number = this.limit,
@@ -31,10 +27,6 @@ export class VehicleListService {
     return this.http.post<any>(this.apiUrl, { query, variables });
   }
 
-  /**
-   * Update a vehicle (GraphQL mutation). Returns observable for caller to handle.
-   * Note: shape of mutation/input may need to be adjusted to match backend.
-   */
   updateVehicle(vehicle: Vehicle): Observable<any> {
     const mutation = `mutation UpdateVehicle($id:Int! ,$input: UpdateVehicleDto!){ updateVehicle(id:$id, updateVehicleInput:$input){ id } }`;
     // Build input object - keep the same fields as the Vehicle type
@@ -53,9 +45,6 @@ export class VehicleListService {
     return this.http.post<any>(this.apiUrl, { query: mutation, variables });
   }
 
-  /**
-   * Delete a vehicle by id (GraphQL mutation).
-   */
   deleteVehicle(id: number): Observable<any> {
     const mutation = `mutation RemoveVehicle($id:Int!){ removeVehicle(id:$id){ id } }`;
     const variables = { id: Number(id) };

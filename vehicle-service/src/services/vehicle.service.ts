@@ -49,22 +49,24 @@ export class VehicleService {
     const queryBuilder = this.vehicleRepository.createQueryBuilder('vehicle');
 
     // Apply filters
-    if (filter?.search) {
-      queryBuilder.where(
-        'vehicle.carModel LIKE :search OR vehicle.carMake LIKE :search OR vehicle.firstName LIKE :search OR vehicle.lastName LIKE :search',
-        { search: `%${filter.search}%` },
-      );
-    }
+    // if (filter?.search) {
+    //   queryBuilder.where(
+    //     'vehicle.carModel LIKE :search OR vehicle.carMake LIKE :search OR vehicle.firstName LIKE :search OR vehicle.lastName LIKE :search',
+    //     { search: `%${filter.search}%` },
+    //   );
+    // }
 
-    if (filter?.carMake) {
-      queryBuilder.andWhere('vehicle.carMake LIKE :carMake', {
-        carMake: `%${filter.carMake}%`,
-      });
-    }
+    // if (filter?.carMake) {
+    //   queryBuilder.andWhere('vehicle.carMake LIKE :carMake', {
+    //     carMake: `%${filter.carMake}%`,
+    //   });
+    // }
+
+    // if add % front end back it will search the give value even in middle
 
     if (filter?.carModel) {
-      queryBuilder.andWhere('vehicle.carModel LIKE :carModel', {
-        carModel: `%${filter.carModel}%`,
+      queryBuilder.andWhere('vehicle.carModel ILIKE :carModel', {
+        carModel: `${filter.carModel}%`,
       });
     }
 

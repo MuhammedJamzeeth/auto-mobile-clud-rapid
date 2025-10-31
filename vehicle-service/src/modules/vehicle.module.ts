@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Vehicle } from 'src/entities/vehicle.entity';
-import { NotificationGateway } from 'src/gateways/notification.gateway';
 import { VehicleService } from 'src/services/vehicle.service';
 import { VehicleResolver } from 'src/resolvers/vehicle.resolver';
 import { JobService } from 'src/services/job.service';
@@ -23,7 +22,6 @@ import { ExportJobProcessor } from 'src/processors/export-job.processor';
   ],
   controllers: [UploadController, AuthController],
   providers: [
-    NotificationGateway,
     VehicleService,
     AuthService,
     JobService,
