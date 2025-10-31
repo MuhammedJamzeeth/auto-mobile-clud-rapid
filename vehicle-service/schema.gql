@@ -29,11 +29,21 @@ type PaginatedVehiclesResponse {
 type ExportOutput {
   jobId: String!
   message: String
+  status: String!
+}
+
+type JobStatus {
+  jobId: String!
+  status: String!
+  progress: Float!
+  failedReason: String
+  filePath: String
 }
 
 type Query {
   vehicles(page: Int! = 1, limit: Int! = 100, filter: VehicleFilterDto): PaginatedVehiclesResponse!
   vehicle(id: Int!): Vehicle!
+  jobStatus(jobId: String!): JobStatus!
 }
 
 input VehicleFilterDto {
@@ -63,5 +73,4 @@ input UpdateVehicleDto {
 input ExportInput {
   age: Float
   userId: String
-  exportPath: String!
 }

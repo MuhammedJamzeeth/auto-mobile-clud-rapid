@@ -60,7 +60,7 @@
           </mat-card-header>
 
           <mat-card-content>
-            <app-vehicle-list #vehicleList />
+            <app-vehicle-list #vehicleList (exportStarted)="onExportStarted()" />
           </mat-card-content>
         </mat-card>
       </div>

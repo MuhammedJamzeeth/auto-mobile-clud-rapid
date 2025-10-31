@@ -1,0 +1,58 @@
+<div class="export-dialog">
+  <div mat-dialog-title>
+    <mat-icon class="dialog-icon">download</mat-icon>
+    Export Vehicles
+  </div>
+
+  <div mat-dialog-content class="dialog-content">
+    <p class="description">
+      Export vehicle data as CSV. You can filter by vehicle age or export all vehicles.
+    </p>
+
+    <mat-form-field appearance="outline" class="age-field">
+      <mat-label>Vehicle Age (years)</mat-label>
+      <input
+        matInput
+        type="number"
+        [(ngModel)]="age"
+        placeholder="Leave empty for all vehicles"
+        min="0"
+        max="50"
+      />
+      <mat-icon matSuffix>schedule</mat-icon>
+      <mat-hint>Optional: Filter by maximum vehicle age</mat-hint>
+    </mat-form-field>
+
+    <div class="export-info">
+      <mat-icon class="info-icon">info</mat-icon>
+      <span>
+        @if (age) { Exporting vehicles up to {{ age }} years old } @else { Exporting all vehicles }
+      </span>
+    </div>
+  </div>
+
+  <div mat-dialog-actions class="dialog-actions">
+    <button mat-button (click)="cancel()" [disabled]="loading">
+      <mat-icon>cancel</mat-icon>
+      Cancel
+    </button>
+
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="export()"
+      [disabled]="loading"
+      class="export-btn"
+    >
+      @if (loading) {
+      <mat-spinner diameter="20"></mat-spinner>
+      <span>Exporting...</span>
+      } @else {
+      <div class="export-content">
+        <mat-icon>download</mat-icon>
+        <span>Export CSV</span>
+      </div>
+      }
+    </button>
+  </div>
+</div>

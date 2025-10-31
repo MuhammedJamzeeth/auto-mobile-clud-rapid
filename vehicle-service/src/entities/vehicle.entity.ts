@@ -30,7 +30,7 @@ export class Vehicle {
   lastName: string;
 
   @Field()
-  @Column({ unique: true })
+  @Column()
   email: string;
 
   @Field()

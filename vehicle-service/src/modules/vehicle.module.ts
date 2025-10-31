@@ -11,6 +11,7 @@ import { AuthController } from 'src/controllers/auth.controller';
 import { AuthService } from 'src/services/auth.service';
 import { JobResolver } from 'src/resolvers/job.resolver';
 import { ExportJobProcessor } from 'src/processors/export-job.processor';
+import { ExportController } from 'src/controllers/export.controller';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { ExportJobProcessor } from 'src/processors/export-job.processor';
     BullModule.registerQueue({ name: 'notification' }),
     BullModule.registerQueue({ name: 'export-queue' }),
   ],
-  controllers: [UploadController, AuthController],
+  controllers: [UploadController, AuthController, ExportController],
   providers: [
     VehicleService,
     AuthService,

@@ -16,6 +16,7 @@ import { GlobalLoading } from './components/global-loading/global-loading';
 import { LoginComponent, LoginResponse } from './components/login/login';
 import { LoadingService } from './services/loading.service';
 import { AuthService } from './services/auth.service';
+import { SocketService } from './services/socket-service';
 
 @Component({
   selector: 'app-root',
@@ -46,6 +47,7 @@ export class App implements AfterViewInit {
   protected readonly showRightPanel = signal(false);
   protected readonly loadingService = inject(LoadingService);
   protected readonly authService = inject(AuthService);
+  private readonly socketService = inject(SocketService);
 
   ngAfterViewInit() {
     // Vehicle list component is now available for manual refresh if needed
@@ -55,6 +57,14 @@ export class App implements AfterViewInit {
   onLoginSuccess(loginResponse: LoginResponse): void {
     console.log('User logged in successfully:', loginResponse);
     this.authService.setLoggedIn(loginResponse.userId);
+
+    // Join user for notifications after a brief delay to ensure socket is ready
+    setTimeout(() => {
+      if (this.socketService.isConnected) {
+        this.socketService.joinUser(loginResponse.userId);
+        console.log('User joined for notifications on login:', loginResponse.userId);
+      }
+    }, 500);
   }
 
   onLogout(): void {
@@ -105,5 +115,11 @@ export class App implements AfterViewInit {
     console.log(
       'Vehicle table will auto-refresh when processing completes via WebSocket notification'
     );
+  }
+
+  onExportStarted() {
+    // Automatically show the notification panel when export starts
+    this.showRightPanel.set(true);
+    console.log('Export started - notification panel should be visible');
   }
 }

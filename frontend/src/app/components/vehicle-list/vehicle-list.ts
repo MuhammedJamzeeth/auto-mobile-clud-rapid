@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
@@ -9,11 +9,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { VehicleListService } from '../../services/vehicle-list';
 import { Vehicle } from '../models/vehicle.type';
 import { SocketService } from '../../services/socket-service';
 import { Subject, takeUntil } from 'rxjs';
+import { ExportDialogComponent, ExportDialogData } from '../export-dialog/export-dialog';
 
 @Component({
   selector: 'app-vehicle-list',
@@ -37,7 +38,10 @@ import { Subject, takeUntil } from 'rxjs';
 export class VehicleList implements OnInit, OnDestroy {
   private vehicleListService = inject(VehicleListService);
   private socketService = inject(SocketService);
+  private dialog = inject(MatDialog);
   private destroy$ = new Subject<void>();
+
+  @Output() exportStarted = new EventEmitter<void>();
 
   vehicles: Vehicle[] = [];
   page = 1;
@@ -71,7 +75,7 @@ export class VehicleList implements OnInit, OnDestroy {
   }
 
   private setupNotificationListener(): void {
-    // Listen for socket notifications to auto-refresh table when import completes
+    // Listen for socket notifications to auto-refresh table when import/export completes
     this.socketService.onNotify((data: any) => {
       console.log('VehicleList received notification:', data);
 
@@ -82,6 +86,17 @@ export class VehicleList implements OnInit, OnDestroy {
         setTimeout(() => {
           this.load(this.page);
         }, 1000);
+      }
+
+      // Check if this is an export completion notification
+      if (data?.type === 'export' && data?.status === 'completed') {
+        console.log('Export completed:', data.message);
+        // You could show a success notification here
+      }
+
+      if (data?.type === 'export' && data?.status === 'failed') {
+        console.error('Export failed:', data.message);
+        // You could show an error notification here
       }
     });
   }
@@ -174,5 +189,27 @@ export class VehicleList implements OnInit, OnDestroy {
     if (age <= 3) return 'age-new';
     if (age <= 7) return 'age-mid';
     return 'age-old';
+  }
+
+  openExportDialog(): void {
+    const dialogData: ExportDialogData = {
+      onExportStarted: () => {
+        console.log('Export started - triggering right panel');
+        this.exportStarted.emit();
+      },
+    };
+
+    const dialogRef = this.dialog.open(ExportDialogComponent, {
+      width: '500px',
+      disableClose: false,
+      data: dialogData,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result?.success) {
+        console.log('Export completed successfully');
+        // You could show a success message here
+      }
+    });
   }
 }

@@ -38,6 +38,19 @@
           margin-right: 8px;
         }
       }
+
+      .export-btn {
+        mat-icon {
+          margin-right: 8px;
+        }
+
+        background: #ff6f00;
+        color: white;
+
+        &:hover {
+          background: #e65100;
+        }
+      }
     }
 
     .page-info {

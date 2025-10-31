@@ -6,7 +6,12 @@ import {
 } from 'src/dto/vehicle.dto';
 import { Vehicle } from 'src/entities/vehicle.entity';
 import { Repository } from 'typeorm';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 
 export interface PaginatedVehicles {
   vehicles: Vehicle[];
@@ -17,6 +22,7 @@ export interface PaginatedVehicles {
 
 @Injectable()
 export class VehicleService {
+  private readonly logger = new Logger(VehicleService.name);
   constructor(
     @InjectRepository(Vehicle) private vehicleRepository: Repository<Vehicle>,
   ) {}
@@ -127,6 +133,16 @@ export class VehicleService {
     id: number,
     updateVehicleDto: UpdateVehicleDto,
   ): Promise<Vehicle> {
+    const existingVehicle = await this.vehicleRepository.findOne({
+      where: { vin: updateVehicleDto.vin },
+    });
+
+    if (existingVehicle && existingVehicle.id !== id) {
+      throw new ConflictException(
+        `Vehicle with VIN ${updateVehicleDto.vin} already exists`,
+      );
+    }
+
     const vehicle = await this.findOne(id);
 
     // Partial update, it will only update the fields provided in upddateVehicleDto
