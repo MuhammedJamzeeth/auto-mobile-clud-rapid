@@ -144,6 +144,14 @@
             @if (!isEditing(vehicle)) {
             <button
               mat-icon-button
+              color="accent"
+              (click)="viewRecords(vehicle)"
+              matTooltip="View service records"
+            >
+              <mat-icon>build</mat-icon>
+            </button>
+            <button
+              mat-icon-button
               color="primary"
               (click)="startEdit(vehicle)"
               matTooltip="Edit vehicle"

@@ -15,6 +15,11 @@ import { IntrospectAndCompose } from '@apollo/gateway';
               url:
                 process.env.VEHICLE_GRAPHQL || 'http://localhost:3000/graphql',
             },
+            {
+              name: 'record',
+              url:
+                process.env.RECORD_GRAPHQL || 'http://localhost:3030/graphql',
+            },
           ],
         }),
       },

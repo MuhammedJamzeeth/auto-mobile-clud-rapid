@@ -1,28 +1,41 @@
-version: '3.8'
+version: "3.8"
 services:
-  postgres:
+  # Vehicle Service Database
+  vehicle-postgres:
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: jamsy
       POSTGRES_DB: vehicle-service
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - vehicle_pgdata:/var/lib/postgresql/data
     ports:
-      - '5432:5432'
+      - "5432:5432"
+
+  # Record Service Database (separate database as per requirement)
+  record-postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: jamsy
+      POSTGRES_DB: record-service
+    volumes:
+      - record_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
 
   redis:
     image: redis:7-alpine
     ports:
-      - '6379:6379'
+      - "6379:6379"
 
   vehicle-service:
     build: ./vehicle-service
     depends_on:
-      - postgres
+      - vehicle-postgres
       - redis
     environment:
-      - DB_HOST=postgres
+      - DB_HOST=vehicle-postgres
       - DB_PORT=5432
       - DB_USERNAME=postgres
       - DB_PASSWORD=jamsy
@@ -34,7 +47,21 @@ services:
       - ./vehicle-service/uploads:/app/uploads
       - ./vehicle-service/exports:/app/exports
     ports:
-      - '3000:3000'
+      - "3000:3000"
+
+  record-service:
+    build: ./record-service
+    depends_on:
+      - record-postgres
+    environment:
+      - DB_HOST=record-postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=jamsy
+      - DB_NAME=record-service
+      - NODE_ENV=development
+    ports:
+      - "3030:3030"
 
   notification-service:
     build: ./notification-service
@@ -44,17 +71,19 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     ports:
-      - '3001:3001'
+      - "3001:3001"
 
   graphql-gateway:
     build: ./graphql-gateway
     depends_on:
       - vehicle-service
+      - record-service
     environment:
-      # the gateway introspects the vehicle subgraph; use service name in compose network
+      # the gateway introspects both subgraphs; use service names in compose network
       - VEHICLE_GRAPHQL=http://vehicle-service:3000/graphql
+      - RECORD_GRAPHQL=http://record-service:3030/graphql
     ports:
-      - '4000:4000'
+      - "4040:4040"
 
   rapid-ui:
     build: ./rapid-ui
@@ -62,11 +91,11 @@ services:
       - GRAPHQL_URL=http://localhost:4000/graphql
       - WS_URL=http://localhost:3001
     ports:
-      - '8080:80'
+      - "8080:80"
     depends_on:
       - graphql-gateway
       - notification-service
 
 volumes:
-  pgdata:
-*** End Patch
+  vehicle_pgdata:
+  record_pgdata:

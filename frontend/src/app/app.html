@@ -10,6 +10,23 @@
       <div class="toolbar-left">
         <mat-icon class="app-icon">directions_car</mat-icon>
         <span class="app-title">{{ title() }}</span>
+
+        <!-- Navigation Links -->
+        <nav class="nav-links">
+          <a
+            routerLink="/"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            mat-button
+          >
+            <mat-icon>list</mat-icon>
+            Vehicles
+          </a>
+          <a routerLink="/vehicle-details" routerLinkActive="active" mat-button>
+            <mat-icon>build</mat-icon>
+            Service Records
+          </a>
+        </nav>
       </div>
 
       <div class="toolbar-center">
@@ -53,6 +70,8 @@
     <!-- Main Content -->
     <div class="main-content">
       <div class="content-wrapper">
+        <!-- Check if we're on the main route -->
+        @if (isMainRoute()) {
         <mat-card class="modern-card main-card">
           <mat-card-header>
             <mat-card-title>Vehicle Management</mat-card-title>
@@ -63,6 +82,10 @@
             <app-vehicle-list #vehicleList (exportStarted)="onExportStarted()" />
           </mat-card-content>
         </mat-card>
+        } @else {
+        <!-- Router outlet for other routes like vehicle-details -->
+        <router-outlet></router-outlet>
+        }
       </div>
     </div>
 

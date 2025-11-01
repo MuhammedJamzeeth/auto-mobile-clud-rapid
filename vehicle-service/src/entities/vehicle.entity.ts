@@ -14,7 +14,7 @@ import {
 } from 'typeorm';
 
 @ObjectType()
-@Directive('@key(fields: "vin")')
+@Directive('@key(fields: "vin")') // to tell if need records give the vin
 @Entity('vehicles')
 export class Vehicle {
   @Field(() => ID)

@@ -43,6 +43,7 @@ type JobStatus {
 type Query {
   vehicles(page: Int! = 1, limit: Int! = 100, filter: VehicleFilterDto): PaginatedVehiclesResponse!
   vehicle(id: Int!): Vehicle!
+  vehicleByVin(vin: String!): Vehicle!
   jobStatus(jobId: String!): JobStatus!
 }
 

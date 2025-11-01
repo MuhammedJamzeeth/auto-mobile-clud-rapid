@@ -31,6 +31,7 @@ export class PaginatedVehiclesResponse {
 export class VehicleResolver {
   constructor(private readonly vehicleService: VehicleService) {}
 
+  // 2.
   @ResolveReference()
   resolveReference(reference: {
     __typename: string;
@@ -52,6 +53,13 @@ export class VehicleResolver {
   @Query(() => Vehicle, { name: 'vehicle' })
   async findOne(@Args('id', { type: () => Int }) id: number): Promise<Vehicle> {
     return this.vehicleService.findOne(id);
+  }
+
+  @Query(() => Vehicle, { name: 'vehicleByVin' })
+  async findByVin(
+    @Args('vin', { type: () => String }) vin: string,
+  ): Promise<Vehicle> {
+    return this.vehicleService.findByVin(vin);
   }
 
   @Mutation(() => Vehicle)

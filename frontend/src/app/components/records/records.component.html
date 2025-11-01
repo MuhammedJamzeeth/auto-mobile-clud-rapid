@@ -1,0 +1,151 @@
+<mat-card class="records-card">
+  <mat-card-header>
+    <mat-card-title>
+      Service Records
+      <span *ngIf="vehicle">
+        - {{ vehicle.carMake }} {{ vehicle.carModel }} ({{ vehicle.vin }})</span
+      >
+      <span *ngIf="vin && !vehicle"> - VIN: {{ vin }}</span>
+    </mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <!-- Add/Edit Form -->
+    <form [formGroup]="recordForm" (ngSubmit)="onSubmit()" class="record-form">
+      <h3>{{ isEditing ? 'Edit' : 'Add New' }} Service Record</h3>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Service Type</mat-label>
+          <mat-select formControlName="serviceType">
+            <mat-option *ngFor="let type of serviceTypes" [value]="type">
+              {{ type }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="recordForm.get('serviceType')?.hasError('required')">
+            Service type is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Description</mat-label>
+          <textarea
+            matInput
+            formControlName="description"
+            placeholder="Enter service description..."
+            rows="3"
+          >
+          </textarea>
+          <mat-error *ngIf="recordForm.get('description')?.hasError('required')">
+            Description is required
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Service Date</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="serviceDate" />
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-error *ngIf="recordForm.get('serviceDate')?.hasError('required')">
+            Service date is required
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Cost (Optional)</mat-label>
+          <input matInput formControlName="cost" placeholder="$0.00" type="text" />
+          <span matTextPrefix>$</span>
+        </mat-form-field>
+      </div>
+
+      <div class="form-actions">
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="recordForm.invalid || !vin"
+        >
+          {{ isEditing ? 'Update Record' : 'Add Record' }}
+        </button>
+
+        <button *ngIf="isEditing" mat-button type="button" (click)="cancelEdit()">Cancel</button>
+      </div>
+    </form>
+
+    <!-- Records Table -->
+    <div class="records-table-container" *ngIf="records.length > 0">
+      <h3>Service History</h3>
+      <table mat-table [dataSource]="records" class="records-table">
+        <!-- Service Date Column -->
+        <ng-container matColumnDef="serviceDate">
+          <th mat-header-cell *matHeaderCellDef>Service Date</th>
+          <td mat-cell *matCellDef="let record">
+            {{ record.serviceDate | date : 'shortDate' }}
+          </td>
+        </ng-container>
+
+        <!-- Service Type Column -->
+        <ng-container matColumnDef="serviceType">
+          <th mat-header-cell *matHeaderCellDef>Service Type</th>
+          <td mat-cell *matCellDef="let record">
+            <span class="service-type-chip">{{ record.serviceType }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Description Column -->
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Description</th>
+          <td mat-cell *matCellDef="let record" class="description-cell">
+            {{ record.description }}
+          </td>
+        </ng-container>
+
+        <!-- Cost Column -->
+        <ng-container matColumnDef="cost">
+          <th mat-header-cell *matHeaderCellDef>Cost</th>
+          <td mat-cell *matCellDef="let record">
+            <span *ngIf="record.cost" class="cost-amount">${{ record.cost }}</span>
+            <span *ngIf="!record.cost" class="no-cost">-</span>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let record">
+            <button
+              mat-icon-button
+              color="primary"
+              (click)="editRecord(record)"
+              matTooltip="Edit Record"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="warn"
+              (click)="deleteRecord(record)"
+              matTooltip="Delete Record"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+
+    <!-- No Records Message -->
+    <div *ngIf="records.length === 0" class="no-records">
+      <mat-icon>build</mat-icon>
+      <p>No service records found for this vehicle.</p>
+      <p *ngIf="!vin">Please select a vehicle to view or add service records.</p>
+    </div>
+  </mat-card-content>
+</mat-card>

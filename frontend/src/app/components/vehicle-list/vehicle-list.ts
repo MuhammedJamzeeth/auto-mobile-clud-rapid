@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -39,6 +40,7 @@ export class VehicleList implements OnInit, OnDestroy {
   private vehicleListService = inject(VehicleListService);
   private socketService = inject(SocketService);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
   private destroy$ = new Subject<void>();
 
   @Output() exportStarted = new EventEmitter<void>();
@@ -211,5 +213,10 @@ export class VehicleList implements OnInit, OnDestroy {
         // You could show a success message here
       }
     });
+  }
+
+  viewRecords(vehicle: Vehicle): void {
+    // Navigate to vehicle details page with the VIN
+    this.router.navigate(['/vehicle-details', vehicle.vin]);
   }
 }

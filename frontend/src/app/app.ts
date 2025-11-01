@@ -1,5 +1,6 @@
 import { Component, signal, inject, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
+import { RouterOutlet, RouterModule, Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
@@ -24,6 +25,8 @@ import { SocketService } from './services/socket-service';
   imports: [
     CommonModule,
     DecimalPipe,
+    RouterOutlet,
+    RouterModule,
     MatToolbarModule,
     MatIconModule,
     MatButtonModule,
@@ -48,6 +51,11 @@ export class App implements AfterViewInit {
   protected readonly loadingService = inject(LoadingService);
   protected readonly authService = inject(AuthService);
   private readonly socketService = inject(SocketService);
+  private readonly router = inject(Router);
+
+  isMainRoute(): boolean {
+    return this.router.url === '/' || this.router.url === '';
+  }
 
   ngAfterViewInit() {
     // Vehicle list component is now available for manual refresh if needed

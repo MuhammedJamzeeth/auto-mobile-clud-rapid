@@ -1,0 +1,133 @@
+<div class="vehicle-details-container">
+  <!-- Search Section -->
+  <mat-card class="search-card">
+    <mat-card-header>
+      <mat-card-title>Vehicle & Service Records</mat-card-title>
+      <mat-card-subtitle
+        >Search for a vehicle to view its details and service history</mat-card-subtitle
+      >
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="searchForm" class="search-form">
+        <div class="search-row">
+          <!-- VIN Input -->
+          <mat-form-field appearance="outline" class="vin-input">
+            <mat-label>Enter VIN</mat-label>
+            <input
+              matInput
+              formControlName="enteredVin"
+              placeholder="Enter vehicle VIN..."
+              (keyup.enter)="onVinSearch()"
+            />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="onVinSearch()"
+            [disabled]="!searchForm.get('enteredVin')?.value"
+          >
+            Search
+          </button>
+        </div>
+
+        <div class="divider">
+          <span>OR</span>
+        </div>
+
+        <div class="search-row">
+          <!-- Vehicle Dropdown -->
+          <mat-form-field appearance="outline" class="vehicle-select">
+            <mat-label>Select Vehicle</mat-label>
+            <mat-select formControlName="selectedVin" (selectionChange)="onVehicleSelect()">
+              <mat-option *ngFor="let vehicle of allVehicles" [value]="vehicle.vin">
+                {{ getVehicleDisplayName(vehicle) }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-button (click)="clearSearch()" [disabled]="!vehicle">Clear</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading vehicle data...</p>
+  </div>
+
+  <!-- Error Message -->
+  <mat-card *ngIf="error && !isLoading" class="error-card">
+    <mat-card-content>
+      <div class="error-content">
+        <mat-icon>error</mat-icon>
+        <p>{{ error }}</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Vehicle Details and Records -->
+  <div *ngIf="vehicle && !isLoading" class="vehicle-content">
+    <!-- Vehicle Information Card -->
+    <mat-card class="vehicle-info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>directions_car</mat-icon>
+          {{ vehicle.carMake }} {{ vehicle.carModel }}
+        </mat-card-title>
+        <mat-card-subtitle>VIN: {{ vehicle.vin }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="vehicle-details-grid">
+          <div class="detail-item">
+            <span class="label">Owner:</span>
+            <span class="value">{{ vehicle.firstName }} {{ vehicle.lastName }}</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">Email:</span>
+            <span class="value">{{ vehicle.email }}</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">Manufactured Date:</span>
+            <span class="value">{{ vehicle.manufacturedDate | date : 'mediumDate' }}</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">Age:</span>
+            <span class="value">{{ vehicle.ageOfVehicle }} years</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Service Records Section -->
+    <app-records
+      [vehicle]="vehicle"
+      [vin]="vehicle.vin"
+      (recordAdded)="onRecordAdded($event)"
+      (recordUpdated)="onRecordUpdated($event)"
+      (recordDeleted)="onRecordDeleted($event)"
+    >
+    </app-records>
+  </div>
+
+  <!-- Empty State -->
+  <mat-card *ngIf="!vehicle && !isLoading && !error" class="empty-state-card">
+    <mat-card-content>
+      <div class="empty-state">
+        <mat-icon>directions_car</mat-icon>
+        <h3>No Vehicle Selected</h3>
+        <p>
+          Enter a VIN or select a vehicle from the dropdown to view its details and service records.
+        </p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
