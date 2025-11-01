@@ -1,0 +1,62 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Vehicle {
+  vin: String!
+  records: [Record!]!
+}
+
+type Record {
+  id: ID!
+  vin: String!
+  description: String!
+  serviceType: String!
+  cost: String
+  serviceDate: DateTime!
+  createdAt: DateTime!
+  vehicle: Vehicle!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type PaginatedRecords {
+  records: [Record!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+}
+
+type Query {
+  records: [Record!]!
+  recordsPaginated(page: Int! = 1, limit: Int! = 100): PaginatedRecords!
+  recordsByVin(vin: String!): [Record!]!
+  record(id: Int!): Record!
+}
+
+type Mutation {
+  createRecord(createRecordInput: CreateRecordInput!): Record!
+  updateRecord(updateRecordInput: UpdateRecordInput!): Record!
+  removeRecord(id: Int!): Record!
+}
+
+input CreateRecordInput {
+  vin: String!
+  description: String!
+  serviceType: String!
+  cost: String
+  serviceDate: DateTime!
+}
+
+input UpdateRecordInput {
+  vin: String
+  description: String
+  serviceType: String
+  cost: String
+  serviceDate: DateTime
+  id: Int!
+}
