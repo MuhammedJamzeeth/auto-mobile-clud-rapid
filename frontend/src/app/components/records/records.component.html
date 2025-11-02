@@ -7,6 +7,9 @@
       >
       <span *ngIf="vin && !vehicle"> - VIN: {{ vin }}</span>
     </mat-card-title>
+    <mat-card-subtitle *ngIf="vehicle">
+      Owner: {{ vehicle.firstName }} {{ vehicle.lastName }}
+    </mat-card-subtitle>
   </mat-card-header>
 
   <mat-card-content>

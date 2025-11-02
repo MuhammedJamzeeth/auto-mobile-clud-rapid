@@ -12,6 +12,19 @@ export interface Record {
   createdAt: Date;
 }
 
+export interface Vehicle {
+  id: string;
+  vin: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  carMake: string;
+  carModel: string;
+  manufacturedDate: string;
+  ageOfVehicle: number;
+  records?: Record[];
+}
+
 export interface CreateRecordInput {
   vin: string;
   description: string;
@@ -36,17 +49,31 @@ export class RecordsService {
 
   constructor(private http: HttpClient) {}
 
-  getRecordsByVin(vin: string): Observable<any> {
+  /**
+   * Fetch vehicle data along with its records using GraphQL Federation
+   * This uses the federation query that combines data from vehicle-service and record-service
+   */
+  getVehicleWithRecords(vin: string): Observable<any> {
     const query = `
-      query GetRecordsByVin($vin: String!) {
-        recordsByVin(vin: $vin) {
+      query GetVehicleWithRecords($vin: String!) {
+        vehicleByVin(vin: $vin) {
           id
+          firstName
+          lastName
+          email
+          carMake
+          carModel
           vin
-          description
-          serviceType
-          cost
-          serviceDate
-          createdAt
+          manufacturedDate
+          ageOfVehicle
+          records {
+            id
+            description
+            serviceType
+            cost
+            serviceDate
+            createdAt
+          }
         }
       }
     `;
@@ -112,23 +139,5 @@ export class RecordsService {
       query: mutation,
       variables: { id },
     });
-  }
-
-  getAllRecords(): Observable<any> {
-    const query = `
-      query GetAllRecords {
-        records {
-          id
-          vin
-          description
-          serviceType
-          cost
-          serviceDate
-          createdAt
-        }
-      }
-    `;
-
-    return this.http.post<any>(this.apiUrl, { query });
   }
 }

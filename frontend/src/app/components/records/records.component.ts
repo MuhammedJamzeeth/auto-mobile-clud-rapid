@@ -13,28 +13,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-
-export interface Record {
-  id: string;
-  vin: string;
-  description: string;
-  serviceType: string;
-  cost?: string;
-  serviceDate: Date;
-  createdAt: Date;
-}
-
-export interface Vehicle {
-  id: string;
-  vin: string;
-  firstName: string;
-  lastName: string;
-  carMake: string;
-  carModel: string;
-  records?: Record[];
-}
+import { RecordsService, Record, Vehicle } from '../../services/records.service';
 
 @Component({
   selector: 'app-records',
@@ -59,13 +38,13 @@ export interface Vehicle {
   styleUrls: ['./records.component.scss'],
 })
 export class RecordsComponent implements OnInit {
-  @Input() vehicle?: Vehicle;
   @Input() vin?: string;
   @Output() recordAdded = new EventEmitter<Record>();
   @Output() recordUpdated = new EventEmitter<Record>();
   @Output() recordDeleted = new EventEmitter<string>();
+  @Output() vehicleLoaded = new EventEmitter<Vehicle>();
 
-  private readonly apiUrl = 'http://localhost:4040/graphql';
+  vehicle?: Vehicle;
   records: Record[] = [];
   recordForm: FormGroup;
   isEditing = false;
@@ -91,7 +70,11 @@ export class RecordsComponent implements OnInit {
     'Other',
   ];
 
-  constructor(private fb: FormBuilder, private http: HttpClient, private dialog: MatDialog) {
+  constructor(
+    private fb: FormBuilder,
+    private recordsService: RecordsService,
+    private dialog: MatDialog
+  ) {
     this.recordForm = this.fb.group({
       description: ['', [Validators.required]],
       serviceType: ['', [Validators.required]],
@@ -102,42 +85,29 @@ export class RecordsComponent implements OnInit {
 
   ngOnInit() {
     if (this.vin) {
-      this.loadRecords();
+      this.loadVehicleWithRecords();
     }
   }
 
-  loadRecords() {
+  /**
+   * Load vehicle data along with its records using GraphQL Federation
+   * This fetches data from both vehicle-service and record-service in a single query
+   */
+  loadVehicleWithRecords() {
     if (!this.vin) return;
 
-    const query = `
-      query GetRecordsByVin($vin: String!) {
-        recordsByVin(vin: $vin) {
-          id
-          vin
-          description
-          serviceType
-          cost
-          serviceDate
-          createdAt
+    this.recordsService.getVehicleWithRecords(this.vin).subscribe({
+      next: (result) => {
+        if (result.data?.vehicleByVin) {
+          this.vehicle = result.data.vehicleByVin;
+          this.records = result.data.vehicleByVin.records || [];
+          this.vehicleLoaded.emit(this.vehicle);
         }
-      }
-    `;
-
-    this.http
-      .post<any>(this.apiUrl, {
-        query,
-        variables: { vin: this.vin },
-      })
-      .subscribe({
-        next: (result) => {
-          if (result.data?.recordsByVin) {
-            this.records = result.data.recordsByVin;
-          }
-        },
-        error: (error) => {
-          console.error('Error loading records:', error);
-        },
-      });
+      },
+      error: (error) => {
+        console.error('Error loading vehicle with records:', error);
+      },
+    });
   }
 
   onSubmit() {
@@ -153,45 +123,26 @@ export class RecordsComponent implements OnInit {
   createRecord() {
     const formData = this.recordForm.value;
 
-    const mutation = `
-      mutation CreateRecord($input: CreateRecordInput!) {
-        createRecord(createRecordInput: $input) {
-          id
-          vin
-          description
-          serviceType
-          cost
-          serviceDate
-          createdAt
-        }
-      }
-    `;
+    const input = {
+      vin: this.vin!,
+      description: formData.description,
+      serviceType: formData.serviceType,
+      cost: formData.cost || null,
+      serviceDate: formData.serviceDate,
+    };
 
-    this.http
-      .post<any>(this.apiUrl, {
-        query: mutation,
-        variables: {
-          input: {
-            vin: this.vin,
-            description: formData.description,
-            serviceType: formData.serviceType,
-            cost: formData.cost || null,
-            serviceDate: formData.serviceDate,
-          },
-        },
-      })
-      .subscribe({
-        next: (result) => {
-          if (result.data?.createRecord) {
-            this.records.unshift(result.data.createRecord);
-            this.recordAdded.emit(result.data.createRecord);
-            this.resetForm();
-          }
-        },
-        error: (error) => {
-          console.error('Error creating record:', error);
-        },
-      });
+    this.recordsService.createRecord(input).subscribe({
+      next: (result) => {
+        if (result.data?.createRecord) {
+          this.records.unshift(result.data.createRecord);
+          this.recordAdded.emit(result.data.createRecord);
+          this.resetForm();
+        }
+      },
+      error: (error) => {
+        console.error('Error creating record:', error);
+      },
+    });
   }
 
   updateRecord() {
@@ -199,48 +150,29 @@ export class RecordsComponent implements OnInit {
 
     const formData = this.recordForm.value;
 
-    const mutation = `
-      mutation UpdateRecord($input: UpdateRecordInput!) {
-        updateRecord(updateRecordInput: $input) {
-          id
-          vin
-          description
-          serviceType
-          cost
-          serviceDate
-          createdAt
-        }
-      }
-    `;
+    const input = {
+      id: parseInt(this.editingRecordId),
+      description: formData.description,
+      serviceType: formData.serviceType,
+      cost: formData.cost || null,
+      serviceDate: formData.serviceDate,
+    };
 
-    this.http
-      .post<any>(this.apiUrl, {
-        query: mutation,
-        variables: {
-          input: {
-            id: parseInt(this.editingRecordId),
-            description: formData.description,
-            serviceType: formData.serviceType,
-            cost: formData.cost || null,
-            serviceDate: formData.serviceDate,
-          },
-        },
-      })
-      .subscribe({
-        next: (result) => {
-          if (result.data?.updateRecord) {
-            const index = this.records.findIndex((r) => r.id === this.editingRecordId);
-            if (index !== -1) {
-              this.records[index] = result.data.updateRecord;
-            }
-            this.recordUpdated.emit(result.data.updateRecord);
-            this.resetForm();
+    this.recordsService.updateRecord(input).subscribe({
+      next: (result) => {
+        if (result.data?.updateRecord) {
+          const index = this.records.findIndex((r) => r.id === this.editingRecordId);
+          if (index !== -1) {
+            this.records[index] = result.data.updateRecord;
           }
-        },
-        error: (error) => {
-          console.error('Error updating record:', error);
-        },
-      });
+          this.recordUpdated.emit(result.data.updateRecord);
+          this.resetForm();
+        }
+      },
+      error: (error) => {
+        console.error('Error updating record:', error);
+      },
+    });
   }
 
   editRecord(record: Record) {
@@ -256,28 +188,15 @@ export class RecordsComponent implements OnInit {
 
   deleteRecord(record: Record) {
     if (confirm('Are you sure you want to delete this service record?')) {
-      const mutation = `
-        mutation DeleteRecord($id: Int!) {
-          removeRecord(id: $id) {
-            id
-          }
-        }
-      `;
-
-      this.http
-        .post<any>(this.apiUrl, {
-          query: mutation,
-          variables: { id: parseInt(record.id) },
-        })
-        .subscribe({
-          next: () => {
-            this.records = this.records.filter((r) => r.id !== record.id);
-            this.recordDeleted.emit(record.id);
-          },
-          error: (error) => {
-            console.error('Error deleting record:', error);
-          },
-        });
+      this.recordsService.deleteRecord(parseInt(record.id)).subscribe({
+        next: () => {
+          this.records = this.records.filter((r) => r.id !== record.id);
+          this.recordDeleted.emit(record.id);
+        },
+        error: (error) => {
+          console.error('Error deleting record:', error);
+        },
+      });
     }
   }
 
