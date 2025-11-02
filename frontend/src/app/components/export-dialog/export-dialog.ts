@@ -120,6 +120,7 @@ export class ExportDialogComponent implements OnInit, OnDestroy {
                   const ageFilter = this.age ? `_age-${this.age}` : '_all';
                   const filename = `vehicles_export_${timestamp}${ageFilter}.csv`;
 
+                  // takes the binary data (Blob) and triggers a file download in the browser
                   this.exportService.downloadFile(blob, filename);
                   this.loading = false;
                   this.dialogRef.close({ success: true });

@@ -84,7 +84,7 @@ export class VehicleService {
     queryBuilder.skip(offset).take(limit);
 
     const [vehicles, total] = await queryBuilder.getManyAndCount();
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / limit); // return smallest int
 
     return {
       vehicles,
