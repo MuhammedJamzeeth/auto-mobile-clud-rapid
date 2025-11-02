@@ -104,8 +104,8 @@ export class UploadController {
       return {
         success: true,
         message: 'File uploaded and import job started',
-        jobId: job.jobId.toString(),
-        jobData: job.jobData,
+        // jobId: job.jobId.toString(),
+        // jobData: job.jobData,
         fileName: file.originalname,
         fileSize: file.size,
         fileType,
