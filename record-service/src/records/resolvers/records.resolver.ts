@@ -1,9 +1,18 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  Int,
+  ResolveField,
+  Parent,
+} from '@nestjs/graphql';
 import { Record } from '../entities/record.entity';
 import { RecordsService } from '../records.service';
 import { CreateRecordInput } from '../dto/create-record.input';
 import { UpdateRecordInput } from '../dto/update-record.input';
 import { PaginatedRecords } from '../dto/paginated-records.dto';
+import { Vehicle } from '../entities/vehicle.reference.entity';
 
 @Resolver(() => Record)
 export class RecordsResolver {
@@ -51,5 +60,15 @@ export class RecordsResolver {
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Record> {
     return await this.recordsService.remove(id);
+  }
+
+  // Resolve the vehicle field for Record type
+  // This returns a reference that the gateway will use to fetch the full Vehicle
+  @ResolveField(() => Vehicle)
+  vehicle(@Parent() record: Record): { __typename: string; vin: string } {
+    return {
+      __typename: 'Vehicle',
+      vin: record.vin,
+    };
   }
 }
