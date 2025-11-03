@@ -128,6 +128,16 @@ export class ImportJobProcessor {
       });
 
       throw new InternalServerErrorException('Import job failed');
+    } finally {
+      // Delete the uploaded file after processing (success or failure)
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          this.logger.log(`Deleted uploaded file: ${filePath}`);
+        }
+      } catch (deleteError) {
+        this.logger.warn(`Failed to delete file ${filePath}:`, deleteError);
+      }
     }
   }
 

@@ -79,16 +79,42 @@ export class ExportController {
 
       const fileName = path.basename(filePath);
 
-      // Set response headers for file download
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${fileName}"`,
-      );
+      try {
+        // Set response headers for file download
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${fileName}"`,
+        );
 
-      // Stream file to response
-      const fileStream = fs.createReadStream(filePath);
-      fileStream.pipe(res);
+        // Stream file to response
+        const fileStream = fs.createReadStream(filePath);
+
+        // Wait for the stream to complete using a promise
+        await new Promise<void>((resolve, reject) => {
+          fileStream.pipe(res);
+
+          fileStream.on('end', () => {
+            this.logger.log(`File streamed successfully: ${filePath}`);
+            resolve();
+          });
+
+          fileStream.on('error', (streamError) => {
+            this.logger.error(`Error streaming file ${filePath}:`, streamError);
+            reject(streamError);
+          });
+        });
+      } finally {
+        // Delete the file after streaming (success or failure)
+        try {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            this.logger.log(`Deleted exported file: ${filePath}`);
+          }
+        } catch (deleteError) {
+          this.logger.warn(`Failed to delete file ${filePath}:`, deleteError);
+        }
+      }
     } catch (error) {
       this.logger.error(
         `Error downloading export file for job ${jobId}:`,
