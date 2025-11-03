@@ -49,9 +49,18 @@ export class VehicleDetailsComponent implements OnInit {
   private readonly apiUrl = 'http://localhost:4040/graphql';
   vehicle?: Vehicle;
   allVehicles: Vehicle[] = [];
+  filteredVehicles: Vehicle[] = [];
   searchForm: FormGroup;
   isLoading = false;
+  isLoadingMoreVehicles = false;
   error?: string;
+
+  // Pagination properties
+  currentPage = 1;
+  pageSize = 100;
+  totalVehicles = 0;
+  totalPages = 0;
+  hasMoreVehicles = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -62,12 +71,18 @@ export class VehicleDetailsComponent implements OnInit {
     this.searchForm = this.fb.group({
       selectedVin: [''],
       enteredVin: [''],
+      vehicleSearch: [''], // New field for filtering dropdown
     });
   }
 
   ngOnInit() {
-    // Load all vehicles for dropdown
-    this.loadAllVehicles();
+    // Load initial vehicles for dropdown with pagination
+    this.loadVehicles();
+
+    // Listen to search input changes for filtering
+    this.searchForm.get('vehicleSearch')?.valueChanges.subscribe((searchTerm) => {
+      this.filterVehicles(searchTerm);
+    });
 
     // Check if VIN is provided in route
     const vin = this.route.snapshot.paramMap.get('vin');
@@ -77,10 +92,10 @@ export class VehicleDetailsComponent implements OnInit {
     }
   }
 
-  loadAllVehicles() {
+  loadVehicles(page: number = 1) {
     const query = `
-      query GetAllVehicles {
-        vehicles {
+      query GetAllVehicles($page: Int!, $limit: Int!) {
+        vehicles(page: $page, limit: $limit) {
           vehicles {
             id
             firstName
@@ -89,20 +104,76 @@ export class VehicleDetailsComponent implements OnInit {
             carModel
             vin
           }
+          total
+          page
+          totalPages
         }
       }
     `;
 
-    this.http.post<any>(this.apiUrl, { query }).subscribe({
-      next: (result) => {
-        if (result.data?.vehicles?.vehicles) {
-          this.allVehicles = result.data.vehicles.vehicles;
-        }
-      },
-      error: (error) => {
-        console.error('Error loading vehicles:', error);
-        this.error = 'Failed to load vehicles';
-      },
+    const isLoadingMore = page > 1;
+    if (isLoadingMore) {
+      this.isLoadingMoreVehicles = true;
+    }
+
+    this.http
+      .post<any>(this.apiUrl, {
+        query,
+        variables: { page, limit: this.pageSize },
+      })
+      .subscribe({
+        next: (result) => {
+          if (result.data?.vehicles) {
+            const response = result.data.vehicles;
+
+            if (page === 1) {
+              // First load - replace vehicles
+              this.allVehicles = response.vehicles || [];
+            } else {
+              // Load more - append vehicles
+              this.allVehicles = [...this.allVehicles, ...(response.vehicles || [])];
+            }
+
+            this.totalVehicles = response.total || 0;
+            this.currentPage = response.page || 1;
+            this.totalPages = response.totalPages || 0;
+            this.hasMoreVehicles = this.currentPage < this.totalPages;
+
+            // Update filtered vehicles
+            this.filterVehicles(this.searchForm.get('vehicleSearch')?.value || '');
+          }
+          this.isLoadingMoreVehicles = false;
+        },
+        error: (error) => {
+          console.error('Error loading vehicles:', error);
+          this.error = 'Failed to load vehicles';
+          this.isLoadingMoreVehicles = false;
+        },
+      });
+  }
+
+  loadMoreVehicles() {
+    if (this.hasMoreVehicles && !this.isLoadingMoreVehicles) {
+      this.loadVehicles(this.currentPage + 1);
+    }
+  }
+
+  onLoadMoreClick(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.loadMoreVehicles();
+  }
+
+  filterVehicles(searchTerm: string) {
+    if (!searchTerm || searchTerm.trim() === '') {
+      this.filteredVehicles = [...this.allVehicles];
+      return;
+    }
+
+    const term = searchTerm.toLowerCase().trim();
+    this.filteredVehicles = this.allVehicles.filter((vehicle) => {
+      const displayName = this.getVehicleDisplayName(vehicle).toLowerCase();
+      return displayName.includes(term) || vehicle.vin.toLowerCase().includes(term);
     });
   }
 

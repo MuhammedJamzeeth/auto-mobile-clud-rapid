@@ -21,23 +21,23 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    console.log('Login request received:', loginDto); // Debug log
+    // console.log('Login request received:', loginDto); // Debug log
 
     const { userId } = loginDto;
 
-    console.log('Extracted userId:', userId, 'Type:', typeof userId); // Debug log
+    // console.log('Extracted userId:', userId, 'Type:', typeof userId); // Debug log
 
     if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
-      console.log('Validation failed: userId is empty or invalid'); // Debug log
+      // console.log('Validation failed: userId is empty or invalid'); // Debug log
       throw new BadRequestException('userId is required and cannot be empty');
     }
 
     try {
       const result = this.authService.login(userId.trim());
-      console.log('Login successful for user:', userId.trim()); // Debug log
+      // console.log('Login successful for user:', userId.trim()); // Debug log
       return result;
     } catch (error) {
-      console.log('Login error:', error); // Debug log
+      // console.log('Login error:', error); // Debug log
       throw error; // Re-throw ConflictException or other errors
     }
   }

@@ -7,6 +7,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Logger,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -49,6 +50,7 @@ const fileFilter = (req: any, file: Express.Multer.File, callback: any) => {
 
 @Controller('upload')
 export class UploadController {
+  private readonly logger = new Logger(UploadController.name);
   constructor(private readonly jobService: JobService) {
     // Ensure uploads directory exists
 
@@ -111,12 +113,16 @@ export class UploadController {
         fileType,
       };
     } catch (error) {
+      this.logger.error(
+        `Failed to start import job for file ${file.path}:`,
+        error,
+      );
       // Clean up file if job creation fails
       if (fs.existsSync(file.path)) {
         fs.unlinkSync(file.path);
       }
       throw new BadRequestException(
-        `Failed to start import job: ${error.message}`,
+        `Failed to start import job for file ${file.path}`,
       );
     }
   }

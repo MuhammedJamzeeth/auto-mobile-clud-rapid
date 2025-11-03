@@ -5,15 +5,20 @@ import {
   Get,
   Param,
   NotFoundException,
+  BadRequestException,
+  Logger,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
 import * as path from 'path';
 import * as fs from 'fs';
+import { In } from 'typeorm';
 
 @Controller('export')
 export class ExportController {
+  private readonly logger = new Logger(ExportController.name);
   constructor(@InjectQueue('export-queue') private exportQueue: Queue) {}
 
   @Get('status/:jobId')
@@ -59,23 +64,17 @@ export class ExportController {
       const job = await this.exportQueue.getJob(jobId);
 
       if (!job) {
-        return res.status(HttpStatus.NOT_FOUND).json({
-          message: 'Export job not found',
-        });
+        throw new NotFoundException('Export job not found');
       }
 
       const isCompleted = await job.isCompleted();
       if (!isCompleted) {
-        return res.status(HttpStatus.BAD_REQUEST).json({
-          message: 'Export job is not completed yet',
-        });
+        throw new BadRequestException('Export job is not completed yet');
       }
 
       const filePath = job.data.filePath;
       if (!filePath || !fs.existsSync(filePath)) {
-        return res.status(HttpStatus.NOT_FOUND).json({
-          message: 'Export file not found',
-        });
+        throw new NotFoundException('Export file not found');
       }
 
       const fileName = path.basename(filePath);
@@ -91,11 +90,13 @@ export class ExportController {
       const fileStream = fs.createReadStream(filePath);
       fileStream.pipe(res);
     } catch (error) {
-      console.error('Download error:', error);
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-        message: 'Error occurred while downloading file',
-        error: error.message,
-      });
+      this.logger.error(
+        `Error downloading export file for job ${jobId}:`,
+        error,
+      );
+      throw new InternalServerErrorException(
+        'Error occurred while downloading file',
+      );
     }
   }
 }

@@ -11,7 +11,7 @@ import { JobService } from 'src/services/job.service';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
 import { console } from 'inspector';
-import { Logger } from '@nestjs/common';
+import { Logger, NotFoundException } from '@nestjs/common';
 import { IsOptional, IsNumber, IsString } from 'class-validator';
 
 @InputType()
@@ -86,7 +86,7 @@ export class JobResolver {
     const job = await this.exportQueue.getJob(jobId);
 
     if (!job) {
-      throw new Error('Job not found');
+      throw new NotFoundException('Job not found');
     }
 
     const isCompleted = await job.isCompleted();

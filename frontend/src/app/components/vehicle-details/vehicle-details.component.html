@@ -42,8 +42,45 @@
           <mat-form-field appearance="outline" class="vehicle-select">
             <mat-label>Select Vehicle</mat-label>
             <mat-select formControlName="selectedVin" (selectionChange)="onVehicleSelect()">
-              <mat-option *ngFor="let vehicle of allVehicles" [value]="vehicle.vin">
+              <!-- Search input inside dropdown -->
+              <mat-form-field appearance="outline" class="dropdown-search">
+                <mat-label>Search vehicles...</mat-label>
+                <input
+                  matInput
+                  formControlName="vehicleSearch"
+                  placeholder="Type to filter..."
+                  (click)="$event.stopPropagation()"
+                />
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+
+              <!-- Vehicle options -->
+              <mat-option *ngFor="let vehicle of filteredVehicles" [value]="vehicle.vin">
                 {{ getVehicleDisplayName(vehicle) }}
+              </mat-option>
+
+              <!-- Load more button -->
+              <mat-option
+                *ngIf="hasMoreVehicles && filteredVehicles.length === allVehicles.length"
+                class="load-more-option"
+                [disabled]="true"
+              >
+                <button
+                  mat-stroked-button
+                  color="primary"
+                  (click)="onLoadMoreClick($event)"
+                  [disabled]="isLoadingMoreVehicles"
+                  class="load-more-button"
+                >
+                  <mat-icon *ngIf="!isLoadingMoreVehicles">expand_more</mat-icon>
+                  <mat-spinner *ngIf="isLoadingMoreVehicles" diameter="20"></mat-spinner>
+                  {{ isLoadingMoreVehicles ? 'Loading...' : 'Load More Vehicles' }}
+                </button>
+              </mat-option>
+
+              <!-- Info text -->
+              <mat-option disabled class="info-option">
+                <small>Showing {{ filteredVehicles.length }} of {{ totalVehicles }} vehicles</small>
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -109,7 +146,6 @@
 
     <!-- Service Records Section -->
     <app-records
-      [vehicle]="vehicle"
       [vin]="vehicle.vin"
       (recordAdded)="onRecordAdded($event)"
       (recordUpdated)="onRecordUpdated($event)"
