@@ -121,6 +121,7 @@ export class UploadController {
       if (fs.existsSync(file.path)) {
         fs.unlinkSync(file.path);
       }
+      // 400
       throw new BadRequestException(
         `Failed to start import job for file ${file.path}`,
       );

@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20.19-alpine AS builder
 
 WORKDIR /app
 
@@ -12,31 +12,24 @@ RUN npm ci --legacy-peer-deps
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application for production
 RUN npm run build
 
-# As production stage used for keep final image small
-
 # Production stage
-FROM node:18-alpine AS production
+FROM node:20.19-alpine AS production
 
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY --from=builder /app/package*.json ./
-
-# Install only production dependencies
-# --only=production ensures dev dependencies are not installed
-RUN npm ci --legacy-peer-deps --only=production && npm cache clean --force
+# Install serve package globally to serve static files
+RUN npm install -g serve
 
 # Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist/frontend/browser ./dist
 
-# set environment to production
-ENV NODE_ENV=production
-
-# Expose port
+# Expose port 3000
 EXPOSE 4200
 
-# Start the application
-CMD ["ng", "serve""]
+# Start the application using serve
+# -s flag enables single-page application mode (routes all requests to index.html)
+# -l flag sets the port
+CMD ["serve", "-s", "dist", "-l", "4200"]
