@@ -64,11 +64,11 @@ export class RecordsResolver {
 
   // Resolve the vehicle field for Record type
   // This returns a reference that the gateway will use to fetch the full Vehicle
-  @ResolveField(() => Vehicle)
-  vehicle(@Parent() record: Record): { __typename: string; vin: string } {
-    return {
-      __typename: 'Vehicle',
-      vin: record.vin,
-    };
-  }
+  // @ResolveField(() => Vehicle)
+  // vehicle(@Parent() record: Record): { __typename: string; vin: string } {
+  //   return {
+  //     __typename: 'Vehicle',
+  //     vin: record.vin,
+  //   };
+  // }
 }
