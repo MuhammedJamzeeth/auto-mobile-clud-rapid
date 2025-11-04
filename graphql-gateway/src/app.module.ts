@@ -1,3 +1,4 @@
+import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloGatewayDriver, ApolloGatewayDriverConfig } from '@nestjs/apollo';
@@ -5,8 +6,18 @@ import { IntrospectAndCompose } from '@apollo/gateway';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     GraphQLModule.forRoot<ApolloGatewayDriverConfig>({
       driver: ApolloGatewayDriver,
+      server: {
+        // Disable CSRF protection for development
+        csrfPrevention: false,
+        // Enable GraphQL Playground
+        playground: true,
+        introspection: true,
+      },
       gateway: {
         supergraphSdl: new IntrospectAndCompose({
           subgraphs: [

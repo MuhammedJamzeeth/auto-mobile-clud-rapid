@@ -1,15 +1,42 @@
-FROM node:18 AS build
-# WORKDIR /app
-# COPY package*.json ./
-# RUN npm ci --silent
-# COPY . .
-# RUN npm run build
+# Build stage
+FROM node:18-alpine AS builder
 
-# FROM node:18-alpine
-# WORKDIR /app
-# COPY --from=build /app/package*.json ./
-# COPY --from=build /app/dist ./dist
-# RUN npm ci --only=production --silent || true
-# ENV NODE_ENV=production
-# EXPOSE 3001
-# CMD ["node", "dist/main"]
+WORKDIR /app
+
+# Copy package.json and package-lock.json (if available)
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies for building)
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN npm run build
+
+# As production stage used for keep final image small
+
+# Production stage
+FROM node:18-alpine AS production
+
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY --from=builder /app/package*.json ./
+
+# Install only production dependencies
+# --only=production ensures dev dependencies are not installed
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application from builder stage
+COPY --from=builder /app/dist ./dist
+
+# set environment to production
+ENV NODE_ENV=production
+
+# Expose port
+EXPOSE 3001
+
+# Start the application
+CMD ["node", "dist/main"]

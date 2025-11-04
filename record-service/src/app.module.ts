@@ -23,6 +23,7 @@ import { Record } from './records/entities/record.entity';
       database: process.env.DB_NAME || 'record-service',
       entities: [Record],
       synchronize: process.env.NODE_ENV !== 'production',
+      // ssl: false,
     }),
     GraphQLModule.forRoot<ApolloFederationDriverConfig>({
       driver: ApolloFederationDriver,

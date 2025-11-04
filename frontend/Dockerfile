@@ -34,11 +34,9 @@ COPY --from=builder /app/dist ./dist
 
 # set environment to production
 ENV NODE_ENV=production
-ENV VEHICLE_GRAPHQL=http://vehicle-service:3000/graphql
-ENV RECORD_GRAPHQL=http://record-service:3030/graphql
 
 # Expose port
-EXPOSE 4040
+EXPOSE 4200
 
 # Start the application
-CMD ["node", "dist/main"]
+CMD ["ng", "serve""]

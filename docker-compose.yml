@@ -5,40 +5,59 @@ services:
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: jamsy
+      POSTGRES_PASSWORD: jamzee
       POSTGRES_DB: vehicle-service
+    command: postgres -c ssl=off -c log_statement=all
     volumes:
       - vehicle_pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # Record Service Database (separate database as per requirement)
   record-postgres:
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: jamsy
+      POSTGRES_PASSWORD: jamzee
       POSTGRES_DB: record-service
+    command: postgres -c ssl=off -c log_statement=all
     volumes:
       - record_pgdata:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   vehicle-service:
     build: ./vehicle-service
     depends_on:
-      - vehicle-postgres
-      - redis
+      vehicle-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - DB_HOST=vehicle-postgres
       - DB_PORT=5432
       - DB_USERNAME=postgres
-      - DB_PASSWORD=jamsy
+      - DB_PASSWORD=jamzee
       - DB_NAME=vehicle-service
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -48,25 +67,51 @@ services:
       - ./vehicle-service/exports:/app/exports
     ports:
       - "3000:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          "wget --no-verbose --tries=1 -O- http://localhost:3000/.well-known/apollo/server-health || nc -z localhost 3000",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
 
   record-service:
     build: ./record-service
     depends_on:
-      - record-postgres
+      record-postgres:
+        condition: service_healthy
     environment:
       - DB_HOST=record-postgres
       - DB_PORT=5432
       - DB_USERNAME=postgres
-      - DB_PASSWORD=jamsy
+      - DB_PASSWORD=jamzee
       - DB_NAME=record-service
       - NODE_ENV=development
     ports:
       - "3030:3030"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          "wget --no-verbose --tries=1 -O- http://localhost:3030/.well-known/apollo/server-health || nc -z localhost 3030",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
 
   notification-service:
     build: ./notification-service
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -76,8 +121,10 @@ services:
   graphql-gateway:
     build: ./graphql-gateway
     depends_on:
-      - vehicle-service
-      - record-service
+      vehicle-service:
+        condition: service_healthy
+      record-service:
+        condition: service_healthy
     environment:
       # the gateway introspects both subgraphs; use service names in compose network
       - VEHICLE_GRAPHQL=http://vehicle-service:3000/graphql
@@ -85,16 +132,16 @@ services:
     ports:
       - "4040:4040"
 
-  rapid-ui:
-    build: ./rapid-ui
-    environment:
-      - GRAPHQL_URL=http://localhost:4000/graphql
-      - WS_URL=http://localhost:3001
-    ports:
-      - "8080:80"
-    depends_on:
-      - graphql-gateway
-      - notification-service
+  # rapid-ui:
+  #   build: ./rapid-ui
+  #   environment:
+  #     - GRAPHQL_URL=http://localhost:4000/graphql
+  #     - WS_URL=http://localhost:3001
+  #   ports:
+  #     - "8080:80"
+  #   depends_on:
+  #     - graphql-gateway
+  #     - notification-service
 
 volumes:
   vehicle_pgdata:
