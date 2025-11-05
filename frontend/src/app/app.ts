@@ -2,8 +2,6 @@ import { Component, signal, inject, ViewChild, AfterViewInit } from '@angular/co
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { RouterOutlet, RouterModule, Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -18,6 +16,7 @@ import { LoginComponent, LoginResponse } from './components/login/login';
 import { LoadingService } from './services/loading.service';
 import { AuthService } from './services/auth.service';
 import { SocketService } from './services/socket-service';
+import { NotificationService, AppNotification } from './services/notification.service';
 
 @Component({
   selector: 'app-root',
@@ -51,7 +50,9 @@ export class App implements AfterViewInit {
   protected readonly loadingService = inject(LoadingService);
   protected readonly authService = inject(AuthService);
   private readonly socketService = inject(SocketService);
+  private readonly notificationService = inject(NotificationService);
   private readonly router = inject(Router);
+  private notificationListenerSetup = false;
 
   isMainRoute(): boolean {
     return this.router.url === '/' || this.router.url === '';
@@ -60,6 +61,79 @@ export class App implements AfterViewInit {
   ngAfterViewInit() {
     // Vehicle list component is now available for manual refresh if needed
     console.log('VehicleList component reference:', this.vehicleListComponent);
+
+    console.log('App page initializing socket connection...');
+    this.connectWebSocket();
+  }
+
+  connectWebSocket(): void {
+    console.log('Connecting to WebSocket from App component...');
+    this.socketService.connect();
+
+    // Setup notification listener once at app level
+    if (!this.notificationListenerSetup) {
+      this.setupNotificationListener();
+      this.notificationListenerSetup = true;
+    }
+
+    if (!this.socketService.isConnected) {
+      this.socketService.connection$.subscribe((connected) => {
+        if (connected) {
+          console.log('WebSocket connected successfully from App component');
+
+          const userId = this.authService.getCurrentUserId();
+          if (userId) {
+            this.socketService.joinUser(userId);
+          }
+        } else {
+          console.log('WebSocket disconnected from App component');
+        }
+      });
+    }
+  }
+
+  setupNotificationListener(): void {
+    console.log('Setting up notification listener at App level...');
+
+    // Subscribe to notification observable from socket service
+    this.socketService.notification$.subscribe((data: any) => {
+      console.log('App component - Received notification:', data);
+
+      // Normalize expected payload shape and add to service
+      const notification: AppNotification = {
+        id: data?.id ?? String(Date.now()),
+        type: data?.type,
+        status: data?.status,
+        message: data?.message ?? data?.data?.message ?? JSON.stringify(data),
+        timestamp: data?.timestamp,
+        raw: data,
+      };
+
+      // Add notification to the service (it will persist even if panel is closed)
+      this.notificationService.add(notification);
+
+      // Open the right panel when a notification arrives
+      this.openRightPanel();
+
+      // If this is an import completion notification, show additional feedback
+      if (data?.type === 'import' && data?.status === 'completed') {
+        console.log(data?.data?.data);
+        const importedCount = data?.data?.data?.imported || 0;
+        const errorCount = data?.data?.data?.errors || 0;
+
+        setTimeout(() => {
+          this.notificationService.add({
+            id: `refresh-${Date.now()}`,
+            type: 'info',
+            status: 'completed',
+            message: `Vehicle table refreshed! ${importedCount} vehicles imported${
+              errorCount > 0 ? ` (${errorCount} errors)` : ''
+            }`,
+            timestamp: new Date().toISOString(),
+          });
+        }, 1500); // Show after table refresh
+      }
+    });
   }
 
   onLoginSuccess(loginResponse: LoginResponse): void {
@@ -102,6 +176,12 @@ export class App implements AfterViewInit {
 
   toggleRightPanel() {
     this.showRightPanel.set(!this.showRightPanel());
+  }
+
+  openRightPanel() {
+    if (!this.showRightPanel()) {
+      this.showRightPanel.set(true);
+    }
   }
 
   onUploadStarted() {

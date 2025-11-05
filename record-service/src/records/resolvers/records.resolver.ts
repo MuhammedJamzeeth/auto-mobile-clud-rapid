@@ -12,7 +12,7 @@ import { RecordsService } from '../records.service';
 import { CreateRecordInput } from '../dto/create-record.input';
 import { UpdateRecordInput } from '../dto/update-record.input';
 import { PaginatedRecords } from '../dto/paginated-records.dto';
-import { Vehicle } from '../entities/vehicle.reference.entity';
+// import { Vehicle } from '../entities/vehicle.reference.entity';
 
 @Resolver(() => Record)
 export class RecordsResolver {

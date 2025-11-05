@@ -1,7 +1,7 @@
 import { Directive, Field, ObjectType } from '@nestjs/graphql';
 import { Record } from './record.entity';
 
-@ObjectType('Vehicle')
+@ObjectType()
 @Directive('@extends')
 @Directive('@key(fields: "vin")')
 export class Vehicle {

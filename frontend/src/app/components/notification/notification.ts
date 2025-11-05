@@ -1,20 +1,13 @@
 import { NgClass, NgIf, NgForOf, CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { SocketService } from '../../services/socket-service';
+import { NotificationService, AppNotification } from '../../services/notification.service';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { Subject, takeUntil } from 'rxjs';
-
-interface AppNotification {
-  id: string;
-  type?: string;
-  status?: string;
-  message?: string;
-  timestamp?: string;
-  raw?: any;
-}
+import { App } from '../../app';
 
 @Component({
   selector: 'app-notification',
@@ -28,13 +21,23 @@ export class Notification implements OnInit, OnDestroy {
   isConnected = false;
   connectionError = false;
 
-  // lifetime in ms
-  private readonly life = 60000;
   private destroy$ = new Subject<void>();
+  private readonly app = inject(App);
+  private readonly notificationService = inject(NotificationService);
 
   constructor(private socketService: SocketService) {}
 
   ngOnInit(): void {
+    console.log('Notification component initialized');
+    
+    // Subscribe to notifications from the service
+    this.notificationService.notifications$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((notifications) => {
+        console.log('Notification component - Received notifications update:', notifications.length);
+        this.notifications = notifications;
+      });
+
     // Subscribe to connection status
     this.socketService.connection$.pipe(takeUntil(this.destroy$)).subscribe((connected) => {
       this.isConnected = connected;
@@ -64,49 +67,16 @@ export class Notification implements OnInit, OnDestroy {
       }, 5000);
     });
 
-    // Connect and setup notification listener
-    console.log('Notification component initializing socket connection...');
-    this.socketService.connect();
-    this.socketService.onNotify((data: any) => {
-      console.log('Notification component - Received notification:', data);
-
-      // Normalize expected payload shape and show message
-      const n: AppNotification = {
-        id: data?.id ?? String(Date.now()),
-        type: data?.type,
-        status: data?.status,
-        message: data?.message ?? data?.data?.message ?? JSON.stringify(data),
-        timestamp: data?.timestamp,
-        raw: data,
-      };
-
-      this.show(n);
-
-      // If this is an import completion notification, show additional feedback
-      if (data?.type === 'import' && data?.status === 'completed') {
-        console.log(data?.data?.data);
-        const importedCount = data?.data?.data?.imported || 0;
-        const errorCount = data?.data?.data?.errors || 0;
-
-        setTimeout(() => {
-          this.show({
-            id: `refresh-${Date.now()}`,
-            type: 'info',
-            status: 'completed',
-            message: `Vehicle table refreshed! ${importedCount} vehicles imported${
-              errorCount > 0 ? ` (${errorCount} errors)` : ''
-            }`,
-            timestamp: new Date().toISOString(),
-          });
-        }, 1500); // Show after table refresh
-      }
-    });
+    // Note: WebSocket notification listener is now setup at App component level
+    // This ensures notifications are received even when this component is destroyed
   }
 
   ngOnDestroy(): void {
+    console.log('Notification component destroyed');
     this.destroy$.next();
     this.destroy$.complete();
-    this.socketService.disconnect();
+    // Note: We don't clear notifications here anymore - they persist in the service
+    // this.socketService.disconnect();
   }
 
   testNotification(): void {
@@ -141,16 +111,13 @@ export class Notification implements OnInit, OnDestroy {
   }
 
   show(n: AppNotification): void {
-    // Push to list and schedule removal
-    this.notifications = [n, ...this.notifications];
-
-    // Error notifications stay longer for better visibility
-    const lifetime = n.type === 'error' || n.status === 'failed' ? this.life * 2 : this.life;
-    setTimeout(() => this.remove(n.id), lifetime);
+    // Delegate to the service instead of managing locally
+    this.notificationService.add(n);
   }
 
   remove(id: string): void {
-    this.notifications = this.notifications.filter((x) => x.id !== id);
+    // Delegate to the service instead of managing locally
+    this.notificationService.remove(id);
   }
 
   // Method to show critical error notifications with enhanced highlighting

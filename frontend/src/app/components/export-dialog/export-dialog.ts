@@ -48,8 +48,7 @@ export class ExportDialogComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Optionally disconnect when dialog is closed
-    // Note: You might want to keep the connection alive for other parts of the app
+    // TODD: Optionally disconnect when dialog is closed
     // this.socketService.disconnect();
   }
 

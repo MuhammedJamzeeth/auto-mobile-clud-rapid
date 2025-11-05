@@ -5,7 +5,7 @@ import { Record } from '../entities/record.entity';
 
 // This resolver extends the Vehicle type from the vehicle service
 // and adds the records field to the vehicle
-@Resolver(() => Vehicle)
+@Resolver((of) => Vehicle)
 export class VehicleReferenceResolver {
   constructor(private readonly recordService: RecordsService) {}
 

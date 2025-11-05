@@ -32,13 +32,13 @@ export class VehicleResolver {
   constructor(private readonly vehicleService: VehicleService) {}
 
   // 2.
-  @ResolveReference()
-  resolveReference(reference: {
-    __typename: string;
-    vin: string;
-  }): Promise<Vehicle> {
-    return this.vehicleService.findByVin(reference.vin);
-  }
+  // @ResolveReference()
+  // resolveReference(reference: {
+  //   __typename: string;
+  //   vin: string;
+  // }): Promise<Vehicle> {
+  //   return this.vehicleService.findByVin(reference.vin);
+  // }
 
   @Query(() => PaginatedVehiclesResponse, { name: 'vehicles' })
   async findAll(

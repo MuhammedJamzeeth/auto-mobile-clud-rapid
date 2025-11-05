@@ -14,6 +14,10 @@ export class SocketService {
   private errorSubject = new Subject<any>();
   public connectionError$: Observable<any> = this.errorSubject.asObservable();
 
+  // Add a subject for notifications
+  private notificationSubject = new Subject<any>();
+  public notification$: Observable<any> = this.notificationSubject.asObservable();
+
   constructor() {
     this.socket = io(this.url, {
       autoConnect: false,
@@ -36,6 +40,12 @@ export class SocketService {
     this.socket.on('connect_error', (err: any) => {
       console.error('Socket connect_error:', err);
       this.errorSubject.next(err);
+    });
+
+    // Setup notification listener once in constructor
+    this.socket.on('notification', (data: any) => {
+      console.log('Socket received notification:', data);
+      this.notificationSubject.next(data);
     });
   }
 

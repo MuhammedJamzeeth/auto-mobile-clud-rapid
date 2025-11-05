@@ -33,7 +33,7 @@ export class NotificationGateway
   private logger: Logger = new Logger('NotificationGateway');
 
   // Map to store userId -> socketId relationships
-  private userSockets = new Map<string, string>();
+  private userSockets = new Map<string, string[]>();
   private socketUsers = new Map<string, string>();
 
   handleConnection(client: Socket) {
@@ -44,7 +44,13 @@ export class NotificationGateway
     // Clean up user-socket mappings
     const userId = this.socketUsers.get(client.id);
     if (userId) {
-      this.userSockets.delete(userId);
+      // this.userSockets.delete(userId);
+
+      // Instead of delete all the socket IDs for the user, remove only the disconnected one
+      const socketIds = this.userSockets.get(userId) || [];
+      const updatedSocketIds = socketIds.filter((id) => id !== client.id);
+
+      this.userSockets.set(userId, updatedSocketIds);
       this.socketUsers.delete(client.id);
       this.logger.debug(`User ${userId} disconnected`);
     }
@@ -59,16 +65,18 @@ export class NotificationGateway
     const { userId } = data;
 
     // Remove previous socket mapping if user reconnects
-    const oldSocketId = this.userSockets.get(userId);
-    if (oldSocketId) {
-      this.socketUsers.delete(oldSocketId);
-    }
+    const oldSocketIds = this.userSockets.get(userId) || [];
+    // if (oldSocketIds.length > 0) {
+    //   oldSocketIds.forEach((socketId) => this.socketUsers.delete(socketId));
+    // }
 
     // Store new mapping
-    this.userSockets.set(userId, client.id);
+    this.userSockets.set(userId, [...oldSocketIds, client.id]);
     this.socketUsers.set(client.id, userId);
 
     this.logger.debug(`User ${userId} joined with socket ${client.id}`);
+
+    this.logger.debug(this.userSockets);
 
     // Send confirmation
     client.emit('joined', {
@@ -87,8 +95,12 @@ export class NotificationGateway
     if (notification.userId) {
       // Send to specific user
       const socketId = this.userSockets.get(notification.userId);
-      if (socketId) {
+      if (socketId && socketId.length > 0) {
+        // socketId.forEach((id) => {
+        //   this.server.to(id).emit('notification', payload);
+        // });
         this.server.to(socketId).emit('notification', payload);
+
         this.logger.debug(
           `Notification sent to user ${notification.userId}: ${payload.message}`,
         );
