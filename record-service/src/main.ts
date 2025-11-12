@@ -5,6 +5,7 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Since this service not going to be accessed directly from browsers,
   // app.enableCors({
   //   origin: [''],
   //   credentials: true,
