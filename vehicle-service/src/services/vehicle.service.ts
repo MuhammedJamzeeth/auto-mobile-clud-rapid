@@ -9,9 +9,12 @@ import { Repository } from 'typeorm';
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { DeleteResult } from 'typeorm/browser';
+import { DeleteResultResponse } from 'src/resolvers/vehicle.resolver';
 
 export interface PaginatedVehicles {
   vehicles: Vehicle[];
@@ -145,13 +148,25 @@ export class VehicleService {
 
     const vehicle = await this.findOne(id);
 
-    // Partial update, it will only update the fields provided in upddateVehicleDto
+    // Partial update, it will only update the fields provided in update VehicleDto
     Object.assign(vehicle, updateVehicleDto);
     return await this.vehicleRepository.save(vehicle);
   }
 
-  async remove(id: number): Promise<Vehicle> {
-    const vehicle = await this.findOne(id);
-    return await this.vehicleRepository.remove(vehicle);
+  async remove(id: number): Promise<DeleteResultResponse> {
+    try {
+      const result = await this.vehicleRepository.delete(id);
+
+      if (result.affected && result.affected > 0) {
+        return {
+          message: `Vehicle with ID ${id} has been successfully deleted.`,
+        };
+      }
+
+      return { message: `Vehicle with ID ${id} could not be found.` };
+    } catch (error) {
+      this.logger.error('Failed to delete vehicle', error);
+      throw new InternalServerErrorException('Failed to delete vehicle');
+    }
   }
 }

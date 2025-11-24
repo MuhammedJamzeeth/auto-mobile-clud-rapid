@@ -26,6 +26,10 @@ type PaginatedVehiclesResponse {
   totalPages: Int!
 }
 
+type DeleteResultResponse {
+  message: String!
+}
+
 type ExportOutput {
   jobId: String!
   message: String
@@ -57,7 +61,7 @@ input VehicleFilterDto {
 
 type Mutation {
   updateVehicle(id: Int!, updateVehicleInput: UpdateVehicleDto!): Vehicle!
-  removeVehicle(id: Int!): Vehicle!
+  removeVehicle(id: Int!): DeleteResultResponse!
   exportJob(input: ExportInput!): ExportOutput!
 }
 

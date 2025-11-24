@@ -27,6 +27,12 @@ export class PaginatedVehiclesResponse {
   totalPages: number;
 }
 
+@ObjectType()
+export class DeleteResultResponse {
+  @Field(() => String)
+  message: string;
+}
+
 @Resolver(() => Vehicle)
 export class VehicleResolver {
   constructor(private readonly vehicleService: VehicleService) {}
@@ -70,10 +76,10 @@ export class VehicleResolver {
     return this.vehicleService.update(id, updateVehicleDto);
   }
 
-  @Mutation(() => Vehicle)
+  @Mutation(() => DeleteResultResponse)
   async removeVehicle(
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Vehicle> {
+  ): Promise<DeleteResultResponse> {
     return this.vehicleService.remove(id);
   }
 }

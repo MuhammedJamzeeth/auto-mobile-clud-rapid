@@ -24,6 +24,7 @@ import { ConfigModule } from '@nestjs/config';
       database: process.env.DB_NAME || 'vehicle-service',
       entities: [Vehicle],
       synchronize: process.env.NODE_ENV !== 'production',
+      logging: true
       // ssl: false,
     }),
     GraphQLModule.forRoot<ApolloFederationDriverConfig>({
