@@ -46,7 +46,7 @@ export class VehicleListService {
   }
 
   deleteVehicle(id: number): Observable<any> {
-    const mutation = `mutation RemoveVehicle($id:Int!){ removeVehicle(id:$id){ id } }`;
+    const mutation = `mutation RemoveVehicle($id:Int!){ removeVehicle(id:$id){ message } }`;
     const variables = { id: Number(id) };
     return this.http.post<any>(this.apiUrl, { query: mutation, variables });
   }

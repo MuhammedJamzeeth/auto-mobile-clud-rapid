@@ -136,16 +136,6 @@ export class VehicleService {
     id: number,
     updateVehicleDto: UpdateVehicleDto,
   ): Promise<Vehicle> {
-    const existingVehicle = await this.vehicleRepository.findOne({
-      where: { vin: updateVehicleDto.vin },
-    });
-
-    if (existingVehicle && existingVehicle.id !== id) {
-      throw new ConflictException(
-        `Vehicle with VIN ${updateVehicleDto.vin} already exists`,
-      );
-    }
-
     const vehicle = await this.findOne(id);
 
     // Partial update, it will only update the fields provided in update VehicleDto

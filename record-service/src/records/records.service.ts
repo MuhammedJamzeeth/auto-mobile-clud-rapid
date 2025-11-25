@@ -20,74 +20,41 @@ export class RecordsService {
   ) {}
 
   async create(createRecordInput: CreateRecordInput) {
-    try {
-      const record = this.recordRepository.create(createRecordInput);
-      return await this.recordRepository.save(record);
-    } catch (error) {
-      this.logger.error(
-        `Failed to create record: ${error.message}`,
-        error.stack,
-      );
-      if (error.code === '23505') {
-        // Unique constraint violation
-        throw new BadRequestException('A record with this data already exists');
-      }
-      throw new InternalServerErrorException('Failed to create record');
-    }
+    const record = this.recordRepository.create(createRecordInput);
+    return await this.recordRepository.save(record);
   }
 
   async findAll() {
-    try {
-      return await this.recordRepository.find({
-        order: {
-          serviceDate: 'DESC',
-        },
-      });
-    } catch (error) {
-      this.logger.error(
-        `Failed to fetch all records: ${error.message}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException('Failed to fetch records');
-    }
+    return await this.recordRepository.find({
+      order: {
+        serviceDate: 'DESC',
+      },
+    });
   }
 
   async findAllPaginated(page: number = 1, limit: number = 100) {
-    try {
-      if (page < 1) {
-        throw new BadRequestException('Page number must be greater than 0');
-      }
-      if (limit < 1 || limit > 1000) {
-        throw new BadRequestException('Limit must be between 1 and 1000');
-      }
-
-      const [records, total] = await this.recordRepository.findAndCount({
-        take: limit,
-        skip: (page - 1) * limit,
-        order: {
-          serviceDate: 'DESC',
-        },
-      });
-
-      return {
-        records,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      };
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      this.logger.error(
-        `Failed to fetch paginated records: ${error.message}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException(
-        'Failed to fetch paginated records',
-      );
+    if (page < 1) {
+      throw new BadRequestException('Page number must be greater than 0');
     }
+    if (limit < 1 || limit > 1000) {
+      throw new BadRequestException('Limit must be between 1 and 1000');
+    }
+
+    const [records, total] = await this.recordRepository.findAndCount({
+      take: limit,
+      skip: (page - 1) * limit,
+      order: {
+        serviceDate: 'DESC',
+      },
+    });
+
+    return {
+      records,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findByVin(vin: string): Promise<Record[]> {
@@ -119,33 +86,17 @@ export class RecordsService {
   }
 
   async findOne(id: number) {
-    try {
-      if (!id || id < 1) {
-        throw new BadRequestException('Invalid record ID');
-      }
-
-      const record = await this.recordRepository.findOneBy({ id });
-
-      if (!record) {
-        throw new NotFoundException(`Record with ID ${id} not found`);
-      }
-
-      return record;
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      ) {
-        throw error;
-      }
-      this.logger.error(
-        `Failed to fetch record with ID ${id}: ${error.message}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException(
-        `Failed to fetch record with ID: ${id}`,
-      );
+    if (!id || id < 1) {
+      throw new BadRequestException('Invalid record ID');
     }
+
+    const record = await this.recordRepository.findOneBy({ id });
+
+    if (!record) {
+      throw new NotFoundException(`Record with ID ${id} not found`);
+    }
+
+    return record;
   }
 
   async update(id: number, updateRecordInput: UpdateRecordInput) {
@@ -175,23 +126,14 @@ export class RecordsService {
   }
 
   async remove(id: number): Promise<Record> {
-    try {
-      const record = await this.findOne(id);
-      return await this.recordRepository.remove(record);
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      ) {
-        throw error;
+    return await this.recordRepository.delete(id).then(async (result) => {
+      if (result.affected && result.affected > 0) {
+        return {
+          id,
+        } as Record;
+      } else {
+        throw new NotFoundException(`Record with ID ${id} not found`);
       }
-      this.logger.error(
-        `Failed to remove record with ID ${id}: ${error.message}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException(
-        `Failed to remove record with ID: ${id}`,
-      );
-    }
+    });
   }
 }

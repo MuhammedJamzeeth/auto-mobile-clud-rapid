@@ -1,4 +1,9 @@
 import {
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import {
   Query,
   Args,
   Field,
@@ -35,6 +40,7 @@ export class DeleteResultResponse {
 
 @Resolver(() => Vehicle)
 export class VehicleResolver {
+  private readonly logger = new Logger(VehicleResolver.name);
   constructor(private readonly vehicleService: VehicleService) {}
 
   // 2.
@@ -53,19 +59,48 @@ export class VehicleResolver {
     @Args('filter', { type: () => VehicleFilterDto, nullable: true })
     filter?: VehicleFilterDto,
   ): Promise<PaginatedVehiclesResponse> {
-    return this.vehicleService.findAll(page, limit, filter);
+    try {
+      return this.vehicleService.findAll(page, limit, filter);
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch vehicles: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Failed to fetch vehicles');
+    }
   }
 
   @Query(() => Vehicle, { name: 'vehicle' })
   async findOne(@Args('id', { type: () => Int }) id: number): Promise<Vehicle> {
-    return this.vehicleService.findOne(id);
+    try {
+      return this.vehicleService.findOne(id);
+    } catch (error) {
+      this.logger.error(
+        `Failed to find the vehicle id of: ${id}, error: ${error.message}`,
+      );
+
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to fetch vehicle');
+    }
   }
 
   @Query(() => Vehicle, { name: 'vehicleByVin' })
   async findByVin(
     @Args('vin', { type: () => String }) vin: string,
   ): Promise<Vehicle> {
-    return this.vehicleService.findByVin(vin);
+    try {
+      return this.vehicleService.findByVin(vin);
+    } catch (error) {
+      this.logger.error(
+        `Failed to find the vehicle vin of: ${vin}, error: ${error.message}`,
+      );
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to fetch vehicle');
+    }
   }
 
   @Mutation(() => Vehicle)
@@ -73,13 +108,28 @@ export class VehicleResolver {
     @Args('id', { type: () => Int }) id: number,
     @Args('updateVehicleInput') updateVehicleDto: UpdateVehicleDto,
   ): Promise<Vehicle> {
-    return this.vehicleService.update(id, updateVehicleDto);
+    try {
+      return await this.vehicleService.update(id, updateVehicleDto);
+    } catch (error) {
+      this.logger.error(
+        `Failed to update the vehicle id of: ${id}, error: ${error.message}`,
+      );
+
+      throw new InternalServerErrorException('Failed to update vehicle');
+    }
   }
 
   @Mutation(() => DeleteResultResponse)
   async removeVehicle(
     @Args('id', { type: () => Int }) id: number,
   ): Promise<DeleteResultResponse> {
-    return this.vehicleService.remove(id);
+    try {
+      return await this.vehicleService.remove(id);
+    } catch (error) {
+      this.logger.error(
+        `Failed to remove the vehicle id of: ${id}, error: ${error.message}`,
+      );
+      throw new InternalServerErrorException('Failed to remove vehicle');
+    }
   }
 }

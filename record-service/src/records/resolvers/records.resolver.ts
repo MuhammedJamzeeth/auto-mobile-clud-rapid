@@ -12,22 +12,53 @@ import { RecordsService } from '../records.service';
 import { CreateRecordInput } from '../dto/create-record.input';
 import { UpdateRecordInput } from '../dto/update-record.input';
 import { PaginatedRecords } from '../dto/paginated-records.dto';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 // import { Vehicle } from '../entities/vehicle.reference.entity';
 
 @Resolver(() => Record)
 export class RecordsResolver {
+  private readonly logger = new Logger(RecordsService.name);
   constructor(private readonly recordsService: RecordsService) {}
 
   @Mutation(() => Record)
   createRecord(
     @Args('createRecordInput') createRecordInput: CreateRecordInput,
   ) {
-    return this.recordsService.create(createRecordInput);
+    try {
+      return this.recordsService.create(createRecordInput);
+    } catch (error) {
+      this.logger.error(
+        `Failed to create record: ${error.message}`,
+        error.stack,
+      );
+      if (error.code === '23505') {
+        // Unique constraint violation
+        throw new BadRequestException('A record with this data already exists');
+      }
+      throw new InternalServerErrorException('Failed to create record');
+    }
   }
 
   @Query(() => [Record], { name: 'records' })
   findAll() {
-    return this.recordsService.findAll();
+    try {
+      return this.recordsService.findAll();
+    } catch (error) {
+      this.logger.error(
+        `Failed to create record: ${error.message}`,
+        error.stack,
+      );
+      if (error.code === '23505') {
+        // Unique constraint violation
+        throw new BadRequestException('A record with this data already exists');
+      }
+      throw new InternalServerErrorException('Failed to create record');
+    }
   }
 
   @Query(() => PaginatedRecords, { name: 'recordsPaginated' })
@@ -35,12 +66,33 @@ export class RecordsResolver {
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
     @Args('limit', { type: () => Int, defaultValue: 100 }) limit: number,
   ) {
-    return this.recordsService.findAllPaginated(page, limit);
+    try {
+      return this.recordsService.findAllPaginated(page, limit);
+    } catch (error) {
+      this.logger.error(
+        `Failed to fetch all records: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Failed to fetch records');
+    }
   }
 
   @Query(() => [Record], { name: 'recordsByVin' })
   findByVin(@Args('vin') vin: string) {
-    return this.recordsService.findByVin(vin);
+    try {
+      return this.recordsService.findByVin(vin);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.error(
+        `Failed to fetch paginated records: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException(
+        'Failed to fetch paginated records',
+      );
+    }
   }
 
   @Query(() => Record, { name: 'record' })
@@ -52,14 +104,49 @@ export class RecordsResolver {
   updateRecord(
     @Args('updateRecordInput') updateRecordInput: UpdateRecordInput,
   ) {
-    return this.recordsService.update(updateRecordInput.id, updateRecordInput);
+    try {
+      return this.recordsService.update(
+        updateRecordInput.id,
+        updateRecordInput,
+      );
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      this.logger.error(
+        `Failed to fetch record with ID ${updateRecordInput.id}: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException(
+        `Failed to fetch record with ID: ${updateRecordInput.id}`,
+      );
+    }
   }
 
   @Mutation(() => Record)
   async removeRecord(
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Record> {
-    return await this.recordsService.remove(id);
+    try {
+      return await this.recordsService.remove(id);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      this.logger.error(
+        `Failed to remove record with ID ${id}: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException(
+        `Failed to remove record with ID: ${id}`,
+      );
+    }
   }
 
   // Resolve the vehicle field for Record type
